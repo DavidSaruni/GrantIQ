@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %} User Dashboard {% endblock %}
+{% block content %}
+
+<section class="py-5">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-12">
+        <h1 class="display-4 py-5 text-dark">User Dashboard</h1>
+        <p class="lead">Manage your Grantiq account</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<section id="dashboard" class="py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h2>Welcome {{ user.first_name }}!</h2>
+
+        <!-- Filters -->
+        <form method="GET" class="row g-3 mb-4">
+          <div class="col-md-4">
+            <input type="text" name="q" placeholder="Search by title..." class="form-control" value="{{ request.GET.q }}">
+          </div>
+          <div class="col-md-4">
+            <select name="status" class="form-select">
+              <option value="">All Statuses</option>
+              <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+              <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Filter</button>
+          </div>
+        </form>
+
+        {% if applications %}
+        <p>Here are the grants you have applied for:</p>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Grant Title</th>
+              <th>Status</th>
+              <th>Submitted On</th>
+              <th>Last Updated</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for application in applications %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ application.job }}</td>
+              <td>
+                {% if application.status == 'pending' %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% elif application.status == 'accepted' %}
+                  <span class="badge bg-success">Accepted</span>
+                {% elif application.status == 'rejected' %}
+                  <span class="badge bg-danger">Rejected</span>
+                {% endif %}
+              </td>
+              <td>{{ application.submitted_at|date:"M d, Y" }}</td>
+              <td>{{ application.updated_at|date:"M d, Y" }}</td>
+              <td>
+                {% if application.status == 'accepted' %}
+                  <a class="btn btn-outline-primary btn-sm" href="{% url 'upload_quarterly_report' application.id %}">Upload Report</a>
+                {% else %}
+                  <a class="btn btn-outline-secondary btn-sm" href="{% url 'view_application' application.id %}">View Grant</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+          <ul class="pagination">
+            {% if applications.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ applications.previous_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Previous</a>
+              </li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">Page {{ applications.number }} of {{ applications.paginator.num_pages }}</span></li>
+            {% if applications.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ applications.next_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+
+        {% else %}
+          <p>You have not made any applications yet!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

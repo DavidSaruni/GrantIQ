@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %} User Dashboard {% endblock %}
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-md-12">
+          <h1 class="display-4 py-5 text-dark">Reporting</h1>
+          <p class="lead">Upload your quarterly reports here</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<div class="container mt-5">
+  <h2>Upload Quarterly Report for: {{ application.job }}</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="quarter" class="form-label">Select Quarter</label>
+      <select name="quarter" id="quarter" class="form-select" required>
+        <option value="Q1">Q1</option>
+        <option value="Q2">Q2</option>
+        <option value="Q3">Q3</option>
+        <option value="Q4">Q4</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="report_file" class="form-label">Upload Report (PDF/DOC)</label>
+      <input type="file" name="report_file" id="report_file" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Report</button>
+  </form>
+</div>
+{% endblock %}

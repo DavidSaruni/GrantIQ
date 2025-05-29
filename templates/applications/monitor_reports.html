@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %} Monitor Reports {% endblock %}
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-md-12">
+          <h1 class="display-4 py-5 text-dark">Monitor Reports</h1>
+          <p class="lead">View and manage submitted grant reports</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<div class="container mt-5">
+  <h2 class="mb-4">Submitted Quarterly Reports</h2>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Grant</th>
+        <th>Applicant</th>
+        <th>Quarter</th>
+        <th>Submitted On</th>
+        <th>Report</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ report.application.job }}</td>
+        <td>{{ report.application.name }}</td>
+        <td>{{ report.quarter }}</td>
+        <td>{{ report.submitted_on|date:"M d, Y H:i" }}</td>
+        <td>
+          <a href="{{ report.report_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-muted">No reports submitted yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

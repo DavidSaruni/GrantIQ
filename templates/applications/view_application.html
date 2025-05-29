@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Application Details</h2>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <p><strong>Grant:</strong> {{ application.job }}</p>
+      <p><strong>Applicant:</strong> {{ application.name }}</p>
+      <p><strong>Email:</strong> {{ application.email }}</p>
+      <p><strong>Status:</strong> 
+        {% if application.status == 'pending' %}
+          <span class="badge bg-warning text-dark">Pending</span>
+        {% elif application.status == 'accepted' %}
+          <span class="badge bg-success">Accepted</span>
+        {% elif application.status == 'rejected' %}
+          <span class="badge bg-danger">Rejected</span>
+        {% endif %}
+      </p>
+      <p><strong>Submitted:</strong> {{ application.created_at|date:"M d, Y H:i" }}</p>
+      <p><strong>Last Updated:</strong> {{ application.updated_at|date:"M d, Y H:i" }}</p>
+      <p><strong>Proposal:</strong> 
+        <a href="{{ application.resume.url }}" class="btn btn-outline-info btn-sm" download>Download</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <h5>Review Comments (if any)</h5>
+    <p>{{ application.review_comments|default:"No comments yet." }}</p>
+  </div>
+
+  <div class="mt-4">
+    <h5>Audit Trail</h5>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Reviewer</th>
+          <th>Action</th>
+          <th>Comment</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in application.audit_logs.all %}
+        <tr>
+          <td>{{ log.reviewer.get_full_name }}</td>
+          <td>{{ log.action|capfirst }}</td>
+          <td>{{ log.comment }}</td>
+          <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">No audit logs found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

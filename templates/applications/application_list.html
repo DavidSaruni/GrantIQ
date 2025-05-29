@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}All Applications{% endblock %}
+{% block content %}
+
+<section class="py-5">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-12">
+        <h1 class="display-4 py-5 text-dark">All Applications</h1>
+        <p class="lead">Manage and review all grant applications</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+<div class="container mt-5">
+  <h2 class="mb-4">Applications</h2>
+
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+      <input type="text" name="search" value="{{ request.GET.search }}" class="form-control" placeholder="Search by title...">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        <option value="">All Statuses</option>
+        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+  </form>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Grant Title</th>
+        <th>Applicant</th>
+        <th>Status</th>
+        <th>Submitted On</th>
+        <th>Last Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ app.job }}</td>
+        <td>{{ app.name }}</td>
+        <td>
+          {% if app.status == 'pending' %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% elif app.status == 'accepted' %}
+            <span class="badge bg-success">Accepted</span>
+          {% elif app.status == 'rejected' %}
+            <span class="badge bg-danger">Rejected</span>
+          {% endif %}
+        </td>
+        <td>{{ app.contact_date|date:"M d, Y" }}</td>
+        <td>{{ app.updated_at|date:"M d, Y" }}</td>
+        <td>
+          <a href="{% url 'view_application' app.id %}" class="btn btn-sm btn-outline-primary">View</a>
+          <a href="{% url 'review_application' app.id %}" class="btn btn-sm btn-outline-success">Review</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-center">No applications found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

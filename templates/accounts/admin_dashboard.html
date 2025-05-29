@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+      <div class="row text-center">
+        <div class="col-md-12">
+          <p class="display-4lead py-5">Welcome to the admin dashboard, where you can manage applications and reviewers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<div class="container mt-5">
+  
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-bg-primary">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Total Applications</h6>
+          <h3>{{ stats.total }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-warning">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Pending</h6>
+          <h3>{{ stats.pending }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-success">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Accepted</h6>
+          <h3>{{ stats.accepted }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-danger">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Rejected</h6>
+          <h3>{{ stats.rejected }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Assign Reviewers</h5>
+          <p class="card-text">Assign available reviewers to pending applications.</p>
+          <a href="{% url 'assign_reviewers' %}" class="btn btn-outline-primary">Assign Reviewers</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Promote Users</h5>
+          <p class="card-text">Promote applicants or new users to the reviewer role.</p>
+          <a href="{% url 'promote_reviewer' %}" class="btn btn-outline-secondary">Promote Reviewer</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">View Applications</h5>
+          <p class="card-text">Browse all submitted grant applications.</p>
+          <a href="{% url 'application_list' %}" class="btn btn-outline-success">View Applications</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Monitor Reports</h5>
+            <p class="card-text">Track quarterly reports submitted by grantees.</p>
+            <a href="{% url 'monitor_reports' %}" class="btn btn-outline-dark">Monitor Reports</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Create New Grant</h5>
+          <p class="card-text">Publish new grant opportunities for applicants.</p>
+          <a href="{% url 'create_grant' %}" class="btn btn-outline-primary">Add Grant</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

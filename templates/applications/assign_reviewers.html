@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Assign Reviewers{% endblock %}
+{% block content %}
+
+<section class="py-5">
+  <div class="container">
+    <div class="row text-center">
+      <div class="col-md-12">
+        <h1 class="display-4 py-5 text-dark">Assign Reviewers</h1>
+        <p class="lead">Manage reviewer assignments for grant applications</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="py-5"></section>
+  <div class="container mt-5">
+    <h2>Assign Reviewers to Applications</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+  {% if unassigned_apps %}
+    <form method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="application_id" class="form-label">Select Application</label>
+        <select name="application_id" class="form-select" required>
+          {% for app in unassigned_apps %}
+            <option value="{{ app.id }}">{{ app.job }} - {{ app.applicant.get_full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="reviewer_id" class="form-label">Assign Reviewer</label>
+        <select name="reviewer_id" class="form-select" required>
+          {% for reviewer in reviewers %}
+            <option value="{{ reviewer.id }}">{{ reviewer.get_full_name }} ({{ reviewer.username }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Assign Reviewer</button>
+    </form>
+  {% else %}
+    <p class="text-muted">🎉 All applications have been assigned reviewers!</p>
+  {% endif %}
+</div>
+{% endblock %}

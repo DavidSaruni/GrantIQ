@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Review Application #{{ application.id }}</h2>
+  <p><strong>Grant:</strong> {{ application.job }}</p>
+  <p><strong>Applicant:</strong> {{ application.name }}</p>
+  <p><strong>Status:</strong> {{ application.status }}</p>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="review_comments" class="form-label">Review Comments</label>
+      <textarea name="review_comments" class="form-control" rows="4" required></textarea>
+    </div>
+
+    <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
+    <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
+  </form>
+</div>
+{% endblock %}
