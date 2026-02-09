@@ -1,0 +1,303 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Promote Users to Reviewers{% endblock %}
+{% block page_title %}Promote Users to Reviewers{% endblock %}
+
+{% block content %}
+
+<!-- Success Messages -->
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show" style="border-radius: 12px; border-left: 4px solid #10b981;" role="alert">
+        <i class="fas fa-check-circle"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Stats Overview -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <h6>Total Users</h6>
+        <h2>{{ total_users }}</h2>
+    </div>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <h6>Current Reviewers</h6>
+        <h2>{{ total_reviewers }}</h2>
+    </div>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <h6>Promotable Users</h6>
+        <h2>{{ total_promotable }}</h2>
+    </div>
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <h6>Applicants</h6>
+        <h2>{{ applicants.count }}</h2>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="row" style="margin-top: 2rem;">
+    <!-- Left Column: Promote User Form -->
+    <div class="col-lg-5">
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-user-shield"></i> Promote User to Reviewer
+            </h5>
+            
+            {% if users_to_promote %}
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="user_id" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.75rem;">
+                        <i class="fas fa-user"></i> Select User to Promote
+                    </label>
+                    <select name="user_id" id="user_id" class="form-select" style="border-radius: 8px; border-color: #cbd5e1; padding: 0.75rem;" required>
+                        <option value="">-- Choose a user --</option>
+                        
+                        {% if applicants %}
+                        <optgroup label="Applicants ({{ applicants.count }})">
+                            {% for user in applicants %}
+                            <option value="{{ user.id }}">
+                                {{ user.get_full_name }} - {{ user.email }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endif %}
+                        
+                        {% if grant_managers %}
+                        <optgroup label="Grant Managers ({{ grant_managers.count }})">
+                            {% for user in grant_managers %}
+                            <option value="{{ user.id }}">
+                                {{ user.get_full_name }} - {{ user.email }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endif %}
+                    </select>
+                    <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Select a user to promote to the Reviewer role
+                    </small>
+                </div>
+
+                <div class="alert alert-info" style="border-radius: 8px; border-left: 4px solid #6366f1;">
+                    <h6 style="margin: 0 0 0.5rem 0; color: #1e293b; font-weight: 600;">
+                        <i class="fas fa-lightbulb"></i> Reviewer Responsibilities
+                    </h6>
+                    <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; color: #475569;">
+                        <li>Review and evaluate grant applications</li>
+                        <li>Provide detailed feedback and comments</li>
+                        <li>Make accept/reject recommendations</li>
+                        <li>Maintain confidentiality and impartiality</li>
+                    </ul>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 8px; padding: 0.75rem; font-weight: 600;">
+                        <i class="fas fa-arrow-circle-up"></i> Promote to Reviewer
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="text-center" style="padding: 3rem 1rem;">
+                <i class="fas fa-check-circle" style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;"></i>
+                <h4 style="color: #1e293b; font-weight: 600; margin-bottom: 0.5rem;">All Set!</h4>
+                <p style="color: #64748b; margin: 0;">
+                    No users available for promotion at this time.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quick Stats Card -->
+        <div class="content-card" style="margin-top: 1.5rem;">
+            <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+                <i class="fas fa-chart-pie"></i> User Distribution
+            </h5>
+            
+            <div class="row text-center">
+                <div class="col-6 mb-3">
+                    <div style="padding: 1rem; background: #eff6ff; border-radius: 8px;">
+                        <h3 style="margin: 0; color: #6366f1; font-weight: 700;">{{ applicants.count }}</h3>
+                        <small style="color: #64748b; font-weight: 500;">Applicants</small>
+                    </div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px;">
+                        <h3 style="margin: 0; color: #10b981; font-weight: 700;">{{ grant_managers.count }}</h3>
+                        <small style="color: #64748b; font-weight: 500;">Grant Managers</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Users Lists -->
+    <div class="col-lg-7">
+        <!-- Current Reviewers -->
+        <div class="table-card" style="margin-bottom: 1.5rem;">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-user-check text-success"></i> Current Reviewers ({{ total_reviewers }})
+            </h5>
+            
+            {% if current_reviewers %}
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reviewer in current_reviewers %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">
+                                    <i class="fas fa-user-circle"></i> {{ reviewer.get_full_name }}
+                                </div>
+                            </td>
+                            <td>
+                                <small style="color: #64748b;">{{ reviewer.email }}</small>
+                            </td>
+                            <td>
+                                <small style="color: #64748b;">{{ reviewer.date_joined|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Active Reviewer
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center" style="padding: 2rem;">
+                <i class="fas fa-user-slash" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+                <p style="color: #64748b; margin: 0;">No reviewers yet.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Promotable Users -->
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-users text-warning"></i> Users Available for Promotion ({{ total_promotable }})
+            </h5>
+            
+            {% if users_to_promote %}
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Current Role</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_to_promote %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">
+                                    <i class="fas fa-user"></i> {{ user.get_full_name }}
+                                </div>
+                            </td>
+                            <td>
+                                <small style="color: #64748b;">{{ user.email }}</small>
+                            </td>
+                            <td>
+                                {% if user.role == 'APPLICANT' %}
+                                    <span class="badge bg-info text-dark">
+                                        <i class="fas fa-user"></i> Applicant
+                                    </span>
+                                {% elif user.role == 'GRANT_MANAGER' %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-user-tie"></i> Grant Manager
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        {{ user.get_role_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small style="color: #64748b;">{{ user.date_joined|date:"M d, Y" }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center" style="padding: 3rem;">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                <p style="color: #64748b; margin: 0; font-weight: 500;">No users available for promotion.</p>
+                <small style="color: #94a3b8;">All eligible users have already been promoted to reviewers.</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Guidelines Card -->
+<div class="content-card" style="margin-top: 2rem;">
+    <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> Reviewer Promotion Guidelines
+    </h5>
+    <div class="row">
+        <div class="col-md-3">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-graduation-cap"></i> Qualifications
+                </h6>
+                <small style="color: #64748b;">Ensure users have relevant expertise and experience in grant evaluation</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user-check"></i> Training
+                </h6>
+                <small style="color: #64748b;">Provide necessary training and resources for new reviewers</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-balance-scale"></i> Impartiality
+                </h6>
+                <small style="color: #64748b;">Reviewers must maintain objectivity and avoid conflicts of interest</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #ef4444; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-lock"></i> Confidentiality
+                </h6>
+                <small style="color: #64748b;">All application information must be kept strictly confidential</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+

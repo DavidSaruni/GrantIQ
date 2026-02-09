@@ -62,7 +62,7 @@
   <div class="col-md-12">
     <div class="section-heading">
       <h2>Featured Grants </h2>
-      <a href="{% url 'jobs' %}">view more <i class="fa fa-angle-right"></i></a>
+      <a href="{% url 'grants' %}">view more <i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 
@@ -71,15 +71,15 @@
   {% for job in jobs %}
     <div class="col-md-4">
     <div class="product-item">
-    <a href="{% url 'job' job.id %}"><img src="{{ job.main_image.url }}" alt=""></a>
+    <a href="{% url 'grant' grant.id %}"><img src="{{ grant.main_image.url }}" alt=""></a>
     <div class="down-content">
-    <a href="{% url 'job' job.id %}"><h4> {{job.title}}</h4></a>
-    <h6>${{job.salary | intcomma}}</h6>
-    <h4><small><i class="fa fa-briefcase"></i> {{job.role}}<br> <strong><i class="fa fa-building"></i>  {{job.company}}</strong></small></h4>
+    <a href="{% url 'grant' grant.id %}"><h4> {{grant.title}}</h4></a>
+    <h6>${{grant.salary | intcomma}}</h6>
+    <h4><small><i class="fa fa-briefcase"></i> {{grant.role}}<br> <strong><i class="fa fa-building"></i>  {{grant.company}}</strong></small></h4>
     <small>
-    <strong title="Posted on"><i class="fa fa-calendar"></i> Apply by {{job.deadline | date:"F d Y" }}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+    <strong title="Posted on"><i class="fa fa-calendar"></i> Apply by {{grant.deadline | date:"F d Y" }}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
     <br>
-    <strong title="Type"><i class="fa fa-file"></i> {{job.contract}}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+    <strong title="Type"><i class="fa fa-file"></i> {{grant.contract}}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
     <br>
     <strong title="Location"><i class="fa fa-map-marker"></i> {{job.location}}</strong>
     </small>
@@ -90,7 +90,7 @@
 
 {% else %}
   <div class="col-md-12">
-    <p>No jobs found!</p>
+    <p>No grants found!</p>
   </div>
 {% endif %}
 </div>

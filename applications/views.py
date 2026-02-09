@@ -14,12 +14,37 @@ def is_admin_or_grant_manager(user):
     return user.is_authenticated and user.role in ['ADMIN', 'GRANT_MANAGER']
 
 @login_required
+def my_grants(request):
+    """View for managing accepted grants"""
+    # Get only accepted applications (these are now grants)
+    user_grants = Application.objects.filter(
+        user_id=request.user.id,
+        status='accepted'
+    ).order_by('-updated_at')
+    
+    context = {
+        'grants': user_grants,
+        'total_grants': user_grants.count(),
+    }
+    return render(request, 'grants/my_grants.html', context)
+
+@login_required
 @user_passes_test(lambda u: u.is_staff or u.role == "ADMIN")
 def assign_reviewers(request):
     User = get_user_model()
 
-    applications = Application.objects.all()
-    reviewers = User.objects.filter(role='REVIEWER')  # Make sure 'role' is a field in your custom User model
+    applications = Application.objects.all().select_related('reviewer')
+    reviewers = User.objects.filter(role='REVIEWER')
+    
+    # Separate assigned and unassigned applications
+    assigned_apps = applications.filter(reviewer__isnull=False)
+    unassigned_apps = applications.filter(reviewer__isnull=True)
+    
+    # Calculate statistics
+    total_apps = applications.count()
+    total_reviewers = reviewers.count()
+    assigned_count = assigned_apps.count()
+    unassigned_count = unassigned_apps.count()
 
     if request.method == "POST":
         app_id = request.POST.get("application_id")
@@ -31,19 +56,25 @@ def assign_reviewers(request):
         application.reviewer = reviewer
         application.save()
 
-        messages.success(request, "Reviewer assigned successfully.")
+        messages.success(request, f"Reviewer {reviewer.get_full_name()} assigned successfully to {application.grant}.")
         return redirect("assign_reviewers")
 
     return render(request, "applications/assign_reviewers.html", {
         "applications": applications,
-        "reviewers": reviewers
+        "assigned_apps": assigned_apps,
+        "unassigned_apps": unassigned_apps,
+        "reviewers": reviewers,
+        "total_apps": total_apps,
+        "total_reviewers": total_reviewers,
+        "assigned_count": assigned_count,
+        "unassigned_count": unassigned_count,
     })
 
 
 def application(request):
     if request.method == 'POST':
-        job_id = request.POST['job_id']
-        job = request.POST['job']
+        grant_id = request.POST['grant_id']
+        grant = request.POST['grant']
         creator = request.POST['creator']
         creator_id = request.POST['creator_id']
         name = request.POST['name']
@@ -55,22 +86,22 @@ def application(request):
         #  Check if user has made inquiry already
         if request.user.is_authenticated:
             user_id = request.user.id
-            has_contacted = Application.objects.all().filter(job_id=job_id, user_id=user_id)
+            has_contacted = Application.objects.all().filter(grant_id=grant_id, user_id=user_id)
             if has_contacted:
                 messages.error(request, 'You have already applied for this grant')
-                return redirect('/jobs/'+job_id)    
+                return redirect('/grants/' + str(grant_id))    
 
-        apply = Application(job=job, job_id=job_id,creator=creator,creator_id=creator_id, name=name, email=email, phone=phone,resume=resume, user_id=user_id)
+        apply = Application(grant=grant, grant_id=grant_id, creator=creator, creator_id=creator_id, name=name, email=email, phone=phone, resume=resume, user_id=user_id)
 
         apply.save()
 
 
         messages.success(request, 'Your application has been submitted')
-        return redirect('/jobs/'+ job_id)
+        return redirect('/grants/' + str(grant_id))
     
     else:
         messages.error(request, 'There was an error submitting your application')
-        return redirect('/jobs/')
+        return redirect('/grants/')
 
 @login_required
 def reviewer_dashboard(request):
@@ -81,7 +112,7 @@ def reviewer_dashboard(request):
     applications = Application.objects.all()  # Adjust based on how reviewer is assigned
 
     if query:
-        applications = applications.filter(job=query)
+        applications = applications.filter(grant=query)
     if status_filter:
         applications = applications.filter(status=status_filter)
 
@@ -124,7 +155,7 @@ def review_application(request, pk):
         #     subject=f"Your Grant Application has been {new_status.title()}",
         #     message=(
         #         f"Hello {application.name()},\n\n"
-        #         f"Your application for the grant '{application.job}' has been {new_status}.\n\n"
+        #         f"Your application for the grant '{application.grant}' has been {new_status}.\n\n"
         #         f"Reviewer Comment:\n{comment}\n\n"
         #         f"Thank you for using GrantIQ.\n"
         #     ),
@@ -160,9 +191,36 @@ def reject_application(request, pk):
 
 @login_required
 def application_list(request):
+    from grants.models import Grant
+    from django.db.models import Sum
+    
     applications = Application.objects.all()
+    
+    # Calculate stats
+    stats = {
+        'total': applications.count(),
+        'pending': applications.filter(status='pending').count(),
+        'accepted': applications.filter(status='accepted').count(),
+        'rejected': applications.filter(status='rejected').count(),
+        'total_grants': Grant.objects.filter(is_published=True).count(),
+        'active_projects': applications.filter(status='accepted').count(),
+    }
+    
+    # Calculate budget used (sum of salaries from grants of accepted applications)
+    accepted_apps = applications.filter(status='accepted')
+    budget_used = 0
+    for app in accepted_apps:
+        try:
+            grant = Grant.objects.get(id=app.grant_id)
+            budget_used += grant.salary
+        except Grant.DoesNotExist:
+            pass
+    
+    stats['budget_used'] = budget_used
+    
     return render(request, 'applications/application_list.html', {
-        'applications': applications
+        'applications': applications,
+        'stats': stats
     })
 
 
@@ -199,6 +257,45 @@ def upload_quarterly_report(request, app_id):
 @user_passes_test(lambda u: u.is_authenticated and u.role in ['ADMIN', 'GRANT_MANAGER'])
 def monitor_reports(request):
     reports = QuarterlyReport.objects.select_related('application').order_by('-submitted_on')
-    return render(request, 'applications/monitor_reports.html', {'reports': reports})
+    
+    # Prepare quarterly progress data
+    accepted_applications = Application.objects.filter(status='accepted')
+    quarterly_progress = []
+    
+    for app in accepted_applications:
+        # Get all reports for this application
+        app_reports = QuarterlyReport.objects.filter(application=app)
+        
+        # Create a dictionary to track which quarters have been submitted
+        quarters_submitted = {
+            'Q1': app_reports.filter(quarter='Q1').exists(),
+            'Q2': app_reports.filter(quarter='Q2').exists(),
+            'Q3': app_reports.filter(quarter='Q3').exists(),
+            'Q4': app_reports.filter(quarter='Q4').exists(),
+        }
+        
+        quarterly_progress.append({
+            'grant_title': app.grant,
+            'grantee_name': app.name,
+            'quarters': quarters_submitted,
+            'total_submitted': sum(1 for q in quarters_submitted.values() if q),
+        })
+    
+    # Calculate statistics for the chart
+    quarter_stats = {
+        'Q1': sum(1 for item in quarterly_progress if item['quarters']['Q1']),
+        'Q2': sum(1 for item in quarterly_progress if item['quarters']['Q2']),
+        'Q3': sum(1 for item in quarterly_progress if item['quarters']['Q3']),
+        'Q4': sum(1 for item in quarterly_progress if item['quarters']['Q4']),
+    }
+    
+    context = {
+        'reports': reports,
+        'quarterly_progress': quarterly_progress,
+        'quarter_stats': quarter_stats,
+        'total_grantees': len(quarterly_progress),
+    }
+    
+    return render(request, 'applications/monitor_reports.html', context)
 
 

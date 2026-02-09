@@ -1,78 +1,145 @@
-{% extends 'base.html' %}
+{% extends 'admin_base.html' %}
+
 {% block title %}All Applications{% endblock %}
+{% block page_title %}Applications{% endblock %}
+
 {% block content %}
-
-<section class="py-5">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-12">
-        <h1 class="display-4 py-5 text-dark">All Applications</h1>
-        <p class="lead">Manage and review all grant applications</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Alerts -->
 {% include 'partials/_alerts.html' %}
-<div class="container mt-5">
-  <h2 class="mb-4">Applications</h2>
 
-  <form method="get" class="row g-3 mb-4">
-    <div class="col-md-4">
-      <input type="text" name="search" value="{{ request.GET.search }}" class="form-control" placeholder="Search by title...">
+<!-- Stats Cards -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h6>Total Applications</h6>
+        <h2>{{ stats.total }}</h2>
     </div>
-    <div class="col-md-3">
-      <select name="status" class="form-select">
-        <option value="">All Statuses</option>
-        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
-        <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
-        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
-      </select>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h6>Pending</h6>
+        <h2>{{ stats.pending }}</h2>
     </div>
-    <div class="col-md-3">
-      <button type="submit" class="btn btn-primary">Filter</button>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h6>Accepted</h6>
+        <h2>{{ stats.accepted }}</h2>
     </div>
-  </form>
+    <div class="stat-card danger">
+        <div class="icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <h6>Rejected</h6>
+        <h2>{{ stats.rejected }}</h2>
+    </div>
+</div>
 
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Grant Title</th>
-        <th>Applicant</th>
-        <th>Status</th>
-        <th>Submitted On</th>
-        <th>Last Updated</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for app in applications %}
-      <tr>
-        <td>{{ forloop.counter }}</td>
-        <td>{{ app.job }}</td>
-        <td>{{ app.name }}</td>
-        <td>
-          {% if app.status == 'pending' %}
-            <span class="badge bg-warning text-dark">Pending</span>
-          {% elif app.status == 'accepted' %}
-            <span class="badge bg-success">Accepted</span>
-          {% elif app.status == 'rejected' %}
-            <span class="badge bg-danger">Rejected</span>
-          {% endif %}
-        </td>
-        <td>{{ app.contact_date|date:"M d, Y" }}</td>
-        <td>{{ app.updated_at|date:"M d, Y" }}</td>
-        <td>
-          <a href="{% url 'view_application' app.id %}" class="btn btn-sm btn-outline-primary">View</a>
-          <a href="{% url 'review_application' app.id %}" class="btn btn-sm btn-outline-success">Review</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="7" class="text-center">No applications found.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- Filter Card -->
+<div class="filter-card">
+    <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+        <i class="fas fa-filter"></i> Filter Applications
+    </h5>
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">Search</label>
+            <input type="text" name="search" value="{{ request.GET.search }}" class="form-control" placeholder="Search by grant title or applicant...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-modern btn-primary-modern w-100">
+                <i class="fas fa-search"></i> Apply Filters
+            </button>
+        </div>
+        {% if request.GET.search or request.GET.status %}
+        <div class="col-md-2 d-flex align-items-end">
+            <a href="{% url 'application_list' %}" class="btn btn-outline-secondary w-100" style="border-radius: 8px;">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Applications Table -->
+<div class="table-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 600;">
+            <i class="fas fa-list"></i> All Applications ({{ applications|length }})
+        </h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Grant Title</th>
+                    <th>Applicant</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Submitted On</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #1e293b;">{{ app.grant }}</div>
+                    </td>
+                    <td>{{ app.name }}</td>
+                    <td><small style="color: #64748b;">{{ app.email }}</small></td>
+                    <td>
+                        {% if app.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% elif app.status == 'accepted' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Accepted
+                            </span>
+                        {% elif app.status == 'rejected' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle"></i> Rejected
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ app.contact_date|date:"M d, Y" }}</small></td>
+                    <td><small>{{ app.updated_at|date:"M d, Y" }}</small></td>
+                    <td>
+                        <a href="{% url 'view_application' app.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="{% url 'review_application' app.id %}" class="btn btn-sm btn-outline-success" title="Review Application">
+                            <i class="fas fa-edit"></i> Review
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 3rem;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <p style="color: #64748b; margin: 0;">No applications found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

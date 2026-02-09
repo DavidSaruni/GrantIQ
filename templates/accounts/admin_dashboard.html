@@ -1,109 +1,84 @@
-{% extends 'base.html' %}
+{% extends 'admin_base.html' %}
+
 {% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% load static %}
+
 {% block content %}
+<!-- Welcome Message -->
+<div class="content-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 2rem;">
+    <h3 style="margin: 0 0 0.5rem; font-weight: 700;">
+        <i class="fas fa-user-shield"></i> Welcome to Admin Dashboard
+    </h3>
+    <p style="margin: 0; opacity: 0.9;">Manage grant applications, reviewers, and system operations from here.</p>
+</div>
 
-<section class="py-5">
-    <div class="container">
-      <div class="row text-center">
-        <div class="col-md-12">
-          <p class="display-4lead py-5">Welcome to the admin dashboard, where you can manage applications and reviewers.</p>
+<!-- Key Stats -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card" style="border-left-color: #8b5cf6;">
+        <div class="icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+            <i class="fas fa-gift"></i>
         </div>
-      </div>
+        <h6>Total Grants Offered</h6>
+        <h2>{{ stats.total_grants }}</h2>
     </div>
-  </section>
+    <div class="stat-card" style="border-left-color: #3b82f6;">
+        <div class="icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <h6>Budget Used</h6>
+        <h2>KES {{ stats.budget_used|floatformat:0|default:"0" }}</h2>
+    </div>
+    <div class="stat-card" style="border-left-color: #10b981;">
+        <div class="icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <h6>Active Projects</h6>
+        <h2>{{ stats.active_projects }}</h2>
+    </div>
+</div>
 
-<div class="container mt-5">
-  
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card text-bg-primary">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2">Total Applications</h6>
-          <h3>{{ stats.total }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-bg-warning">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2">Pending</h6>
-          <h3>{{ stats.pending }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-bg-success">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2">Accepted</h6>
-          <h3>{{ stats.accepted }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-bg-danger">
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2">Rejected</h6>
-          <h3>{{ stats.rejected }}</h3>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Assign Reviewers</h5>
-          <p class="card-text">Assign available reviewers to pending applications.</p>
-          <a href="{% url 'assign_reviewers' %}" class="btn btn-outline-primary">Assign Reviewers</a>
-        </div>
-      </div>
+<!-- Action Cards -->
+<div class="actions-grid">
+    <div class="action-card">
+        <h5>Assign Reviewers</h5>
+        <p>Assign available reviewers to pending applications.</p>
+        <a href="{% url 'assign_reviewers' %}" class="btn-modern btn-primary-modern">
+            <i class="fas fa-user-check"></i> Assign Reviewers
+        </a>
     </div>
 
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Promote Users</h5>
-          <p class="card-text">Promote applicants or new users to the reviewer role.</p>
-          <a href="{% url 'promote_reviewer' %}" class="btn btn-outline-secondary">Promote Reviewer</a>
-        </div>
-      </div>
+    <div class="action-card">
+        <h5>Promote Users</h5>
+        <p>Promote applicants or new users to the reviewer role.</p>
+        <a href="{% url 'promote_reviewer' %}" class="btn-modern btn-secondary-modern">
+            <i class="fas fa-user-shield"></i> Promote Reviewer
+        </a>
     </div>
 
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">View Applications</h5>
-          <p class="card-text">Browse all submitted grant applications.</p>
-          <a href="{% url 'application_list' %}" class="btn btn-outline-success">View Applications</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mb-4">
-
-    <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Monitor Reports</h5>
-            <p class="card-text">Track quarterly reports submitted by grantees.</p>
-            <a href="{% url 'monitor_reports' %}" class="btn btn-outline-dark">Monitor Reports</a>
-          </div>
-        </div>
-      </div>
+    <div class="action-card">
+        <h5>View Applications</h5>
+        <p>Browse all submitted grant applications.</p>
+        <a href="{% url 'application_list' %}" class="btn-modern btn-success-modern">
+            <i class="fas fa-list"></i> View Applications
+        </a>
     </div>
 
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Create New Grant</h5>
-          <p class="card-text">Publish new grant opportunities for applicants.</p>
-          <a href="{% url 'create_grant' %}" class="btn btn-outline-primary">Add Grant</a>
-        </div>
-      </div>
+    <div class="action-card">
+        <h5>Monitor Reports</h5>
+        <p>Track quarterly reports submitted by grantees.</p>
+        <a href="{% url 'monitor_reports' %}" class="btn-modern btn-dark-modern">
+            <i class="fas fa-chart-line"></i> Monitor Reports
+        </a>
     </div>
 
-  </div>
+    <div class="action-card">
+        <h5>Create New Grant</h5>
+        <p>Publish new grant opportunities for applicants.</p>
+        <a href="{% url 'create_grant' %}" class="btn-modern btn-primary-modern">
+            <i class="fas fa-plus-circle"></i> Add Grant
+        </a>
+    </div>
 </div>
 {% endblock %}

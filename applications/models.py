@@ -2,12 +2,11 @@ from django.db import models
 from datetime import datetime
 from django.utils import timezone
 from django.conf import settings
-from jobs.models import Job
+from grants.models import Grant
 
 class Application(models.Model):
-  
-  job = models.CharField(max_length=100)
-  job_id = models.IntegerField()
+  grant_id = models.IntegerField()
+  grant = models.CharField(max_length=100)
   creator = models.CharField(max_length=200)
   creator_id = models.IntegerField()
   name = models.CharField(max_length=100)

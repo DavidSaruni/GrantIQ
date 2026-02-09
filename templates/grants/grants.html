@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %} Browse Grants {% endblock %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+  
+  <!-- Page Content -->
+  <div class="page-heading about-heading header-text" style="background-image: url(https://images.unsplash.com/photo-1576849058607-da9d05480027?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1050&q=80);">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Find the best grants for you</h4>
+            <h2>Grants</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- grants -->
+  <section id="grants" class="py-4">
+    <div class="container">
+      <div class="row">
+      {% if grants %}
+
+          {% for grant in grants %}
+            <div class="col-md-6 col-lg-4 mb-4">
+            <div class="product-item">
+              <a href="{% url 'grant' grant.id %}"><img src="{{ grant.main_image.url }}" alt=""></a>
+              <div class="down-content">
+                <a href="{% url 'grant' grant.id %}"><h4> {{grant.title}}</h4></a>
+
+                <h6>${{grant.salary | intcomma}}</h6>
+
+                <h4><small><i class="fa fa-briefcase"></i> {{grant.role}} <br> <strong><i class="fa fa-building"></i>
+                {{grant.company}}</strong></small></h4>
+
+                <small>
+                     <strong title="Posted on"><i class="fa fa-calendar"></i> Apply by {{grant.deadline | date:"F d Y" }}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+                     <br>
+                     <strong title="Type"><i class="fa fa-file"></i> {{grant.contract}}</strong> &nbsp;&nbsp;&nbsp;&nbsp;
+                     <br>
+                     <strong title="Location"><i class="fa fa-map-marker"></i> {{grant.location}}</strong>
+                </small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+
+        {% else %}
+          <div class="col-md-12">
+            <p>No grants found!</p>
+          </div>
+        {% endif %}
+
+        <!-- Pagination --> 
+        <div class="row">
+          <div class="col-md-12">
+
+            <!-- Check if grant has other pages -->
+            {% if grants.has_other_pages %}
+              <ul class="pagination">
+
+                <!-- Check if  PREVIOUS pages -->
+                {% if grants.has_previous %}
+                  <li class="page-item">
+                    <a href="?page={{grants.previous_page_number}}" class="page-link">&laquo;
+                    </a>
+                {% else %}
+                    <li class="page-item disabled">
+                      <a class="page-link">&laquo;
+                      </a>
+                  </li>
+                {% endif %}
+
+                <!-- Loop through page range -->
+                {% for i in grants.paginator.page_range %}
+                  {% if grants.number == i %}
+                    <li class="page-item active">
+                      <a class="page-link">{{i}}</a>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a href="?page={{i}}" class="page-link">{{i}}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                <!-- Check if listing has NEXT pages -->
+                {% if grants.has_next %}
+                  <li class="page-item">
+                    <a href="?page={{grants.next_page_number}}" class="page-link">&raquo;
+                    </a>
+                {% else %}
+                    <li class="page-item disabled">
+                      <a class="page-link">&raquo;
+                      </a>
+                  </li>
+                {% endif %}
+              </ul>
+            {% endif %}
+
+          </div>
+        </div> 
+    </div>
+  </div>
+  </section>
+
+{% endblock %}

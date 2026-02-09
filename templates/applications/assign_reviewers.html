@@ -1,54 +1,295 @@
-{% extends 'base.html' %}
+{% extends 'admin_base.html' %}
+
 {% block title %}Assign Reviewers{% endblock %}
+{% block page_title %}Assign Reviewers{% endblock %}
+
 {% block content %}
 
-<section class="py-5">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-12">
-        <h1 class="display-4 py-5 text-dark">Assign Reviewers</h1>
-        <p class="lead">Manage reviewer assignments for grant applications</p>
-      </div>
+<!-- Success Messages -->
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show" style="border-radius: 12px; border-left: 4px solid #10b981;" role="alert">
+        <i class="fas fa-check-circle"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  </div>
-</section>
+    {% endfor %}
+{% endif %}
 
-
-<section class="py-5"></section>
-  <div class="container mt-5">
-    <h2>Assign Reviewers to Applications</h2>
-
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-success">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-
-  {% if unassigned_apps %}
-    <form method="POST">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label for="application_id" class="form-label">Select Application</label>
-        <select name="application_id" class="form-select" required>
-          {% for app in unassigned_apps %}
-            <option value="{{ app.id }}">{{ app.job }} - {{ app.applicant.get_full_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="reviewer_id" class="form-label">Assign Reviewer</label>
-        <select name="reviewer_id" class="form-select" required>
-          {% for reviewer in reviewers %}
-            <option value="{{ reviewer.id }}">{{ reviewer.get_full_name }} ({{ reviewer.username }})</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Assign Reviewer</button>
-    </form>
-  {% else %}
-    <p class="text-muted">🎉 All applications have been assigned reviewers!</p>
-  {% endif %}
+<!-- Stats Overview -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h6>Total Applications</h6>
+        <h2>{{ total_apps }}</h2>
+    </div>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h6>Assigned</h6>
+        <h2>{{ assigned_count }}</h2>
+    </div>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h6>Unassigned</h6>
+        <h2>{{ unassigned_count }}</h2>
+    </div>
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <h6>Total Reviewers</h6>
+        <h2>{{ total_reviewers }}</h2>
+    </div>
 </div>
+
+<!-- Main Content Grid -->
+<div class="row" style="margin-top: 2rem;">
+    <!-- Left Column: Assign Reviewer Form -->
+    <div class="col-lg-5">
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-user-plus"></i> Assign Reviewer to Application
+            </h5>
+            
+            {% if unassigned_apps %}
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="application_id" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.75rem;">
+                        <i class="fas fa-file-alt"></i> Select Application
+                    </label>
+                    <select name="application_id" id="application_id" class="form-select" style="border-radius: 8px; border-color: #cbd5e1; padding: 0.75rem;" required>
+                        <option value="">-- Choose an application --</option>
+                        {% for app in unassigned_apps %}
+                            <option value="{{ app.id }}">
+                                {{ app.grant }} - {{ app.name }} ({{ app.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Select from {{ unassigned_count }} unassigned application{{ unassigned_count|pluralize }}
+                    </small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="reviewer_id" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.75rem;">
+                        <i class="fas fa-user-check"></i> Assign Reviewer
+                    </label>
+                    <select name="reviewer_id" id="reviewer_id" class="form-select" style="border-radius: 8px; border-color: #cbd5e1; padding: 0.75rem;" required>
+                        <option value="">-- Choose a reviewer --</option>
+                        {% for reviewer in reviewers %}
+                            <option value="{{ reviewer.id }}">
+                                {{ reviewer.get_full_name }} ({{ reviewer.email }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> {{ total_reviewers }} reviewer{{ total_reviewers|pluralize }} available
+                    </small>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 8px; padding: 0.75rem; font-weight: 600;">
+                        <i class="fas fa-check"></i> Assign Reviewer
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="text-center" style="padding: 3rem 1rem;">
+                <i class="fas fa-check-circle" style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;"></i>
+                <h4 style="color: #1e293b; font-weight: 600; margin-bottom: 0.5rem;">All Done!</h4>
+                <p style="color: #64748b; margin: 0;">
+                    All applications have been assigned reviewers. Great work! 🎉
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Available Reviewers Card -->
+        <div class="content-card" style="margin-top: 1.5rem;">
+            <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+                <i class="fas fa-users"></i> Available Reviewers
+            </h5>
+            
+            {% if reviewers %}
+            <div class="list-group" style="max-height: 300px; overflow-y: auto;">
+                {% for reviewer in reviewers %}
+                <div class="list-group-item" style="border-radius: 8px; margin-bottom: 0.5rem; border-color: #e5e7eb;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b;">
+                                <i class="fas fa-user"></i> {{ reviewer.get_full_name }}
+                            </div>
+                            <small style="color: #64748b;">{{ reviewer.email }}</small>
+                        </div>
+                        <span class="badge bg-primary" style="font-size: 0.75rem;">
+                            <i class="fas fa-clipboard-check"></i> Reviewer
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center" style="padding: 2rem;">
+                <i class="fas fa-user-slash" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+                <p style="color: #64748b; margin: 0;">No reviewers available.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Right Column: Applications List -->
+    <div class="col-lg-7">
+        <!-- Unassigned Applications -->
+        {% if unassigned_apps %}
+        <div class="table-card" style="margin-bottom: 1.5rem;">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-exclamation-circle text-warning"></i> Unassigned Applications ({{ unassigned_count }})
+            </h5>
+            
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Grant</th>
+                            <th>Applicant</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in unassigned_apps %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">{{ app.grant|truncatewords:4 }}</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: #1e293b;">{{ app.name }}</div>
+                                <small style="color: #64748b;">{{ app.email }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock"></i> {{ app.status|capfirst }}
+                                </span>
+                            </td>
+                            <td>
+                                <small style="color: #64748b;">{{ app.created_at|date:"M d, Y" }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Assigned Applications -->
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-check-circle text-success"></i> Assigned Applications ({{ assigned_count }})
+            </h5>
+            
+            {% if assigned_apps %}
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Grant</th>
+                            <th>Applicant</th>
+                            <th>Reviewer</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in assigned_apps %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">{{ app.grant|truncatewords:4 }}</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: #1e293b;">{{ app.name }}</div>
+                                <small style="color: #64748b;">{{ app.email }}</small>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.875rem;">
+                                    <i class="fas fa-user-check text-success"></i>
+                                    <strong>{{ app.reviewer.get_full_name }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if app.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-clock"></i> Pending
+                                    </span>
+                                {% elif app.status == 'accepted' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Accepted
+                                    </span>
+                                {% elif app.status == 'rejected' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times"></i> Rejected
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'view_application' app.pk %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center" style="padding: 3rem;">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                <p style="color: #64748b; margin: 0;">No assigned applications yet.</p>
+                <small style="color: #94a3b8;">Applications will appear here once reviewers are assigned.</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Guidelines Card -->
+<div class="content-card" style="margin-top: 2rem;">
+    <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> Reviewer Assignment Guidelines
+    </h5>
+    <div class="row">
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-balance-scale"></i> Fair Distribution
+                </h6>
+                <small style="color: #64748b;">Distribute applications evenly among reviewers to ensure balanced workload</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-clock"></i> Timely Assignment
+                </h6>
+                <small style="color: #64748b;">Assign reviewers promptly to ensure applications are reviewed within deadlines</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-shield-alt"></i> Conflict of Interest
+                </h6>
+                <small style="color: #64748b;">Ensure reviewers have no conflicts of interest with assigned applications</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

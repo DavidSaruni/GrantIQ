@@ -18,9 +18,9 @@ urlpatterns = [
     path('application/<int:pk>/approve/', views.approve_application, name='approve_application'),
     path('application/<int:pk>/reject/', views.reject_application, name='reject_application'),
 
-    # for applicantss
+    # for applicants
     #path('application/<int:pk>/edit/', views.edit_application, name='edit_application'),
-
+    path('my-grants/', views.my_grants, name='my_grants'),
     path('application/<int:app_id>/upload-report/', views.upload_quarterly_report, name='upload_quarterly_report'),
     path('monitor-reports/', views.monitor_reports, name='monitor_reports'),
 

@@ -29,13 +29,13 @@
             <a class="nav-link" href="{% url 'about' %}">ABOUT</a></li>
 
             <li 
-            {% if 'jobs' in request.path %}
+            {% if 'grants' in request.path %}
               class="nav-item active"
             {% else %}
               class="nav-item"
             {% endif %}
             >
-            <a class="nav-link" href="{% url 'jobs' %}">GRANTS</a></li>
+            <a class="nav-link" href="{% url 'grants' %}">GRANTS</a></li>
 
               <!-- If the user is logged in then display dasboard and logout -->
               {% if user.is_authenticated %}

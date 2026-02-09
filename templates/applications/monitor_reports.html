@@ -1,48 +1,333 @@
-{% extends 'base.html' %}
-{% block title %} Monitor Reports {% endblock %}
+{% extends 'admin_base.html' %}
+
+{% block title %}Monitor Reports{% endblock %}
+{% block page_title %}Monitor Reports{% endblock %}
+
 {% block content %}
-
-<section class="py-5">
-    <div class="container">
-      <div class="row text-center">
-        <div class="col-md-12">
-          <h1 class="display-4 py-5 text-dark">Monitor Reports</h1>
-          <p class="lead">View and manage submitted grant reports</p>
+<!-- Stats Overview -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-file-alt"></i>
         </div>
-      </div>
+        <h6>Total Reports</h6>
+        <h2>{{ reports|length }}</h2>
     </div>
-  </section>
-
-<div class="container mt-5">
-  <h2 class="mb-4">Submitted Quarterly Reports</h2>
-
-  <table class="table table-bordered table-striped">
-    <thead class="table-light">
-      <tr>
-        <th>#</th>
-        <th>Grant</th>
-        <th>Applicant</th>
-        <th>Quarter</th>
-        <th>Submitted On</th>
-        <th>Report</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for report in reports %}
-      <tr>
-        <td>{{ forloop.counter }}</td>
-        <td>{{ report.application.job }}</td>
-        <td>{{ report.application.name }}</td>
-        <td>{{ report.quarter }}</td>
-        <td>{{ report.submitted_on|date:"M d, Y H:i" }}</td>
-        <td>
-          <a href="{{ report.report_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="6" class="text-center text-muted">No reports submitted yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <h6>This Quarter</h6>
+        <h2>{{ reports|length }}</h2>
+    </div>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h6>Pending Review</h6>
+        <h2>0</h2>
+    </div>
 </div>
+
+
+<!-- Quarterly Progress Section -->
+<div class="row" style="margin-top: 2rem;">
+    <!-- Progress Table -->
+    <div class="col-lg-7">
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-tasks"></i> Quarterly Report Progress
+            </h5>
+            
+            <div class="table-responsive">
+                <table class="table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Grant / Grantee</th>
+                            <th class="text-center" style="width: 12%;">Q1</th>
+                            <th class="text-center" style="width: 12%;">Q2</th>
+                            <th class="text-center" style="width: 12%;">Q3</th>
+                            <th class="text-center" style="width: 12%;">Q4</th>
+                            <th class="text-center" style="width: 12%;">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in quarterly_progress %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b; margin-bottom: 0.25rem;">{{ item.grant_title|truncatewords:5 }}</div>
+                                <small style="color: #64748b;"><i class="fas fa-user"></i> {{ item.grantee_name }}</small>
+                            </td>
+                            <td class="text-center">
+                                {% if item.quarters.Q1 %}
+                                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.2rem;" title="Submitted"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle" style="color: #e5e7eb; font-size: 1.2rem;" title="Not Submitted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.quarters.Q2 %}
+                                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.2rem;" title="Submitted"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle" style="color: #e5e7eb; font-size: 1.2rem;" title="Not Submitted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.quarters.Q3 %}
+                                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.2rem;" title="Submitted"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle" style="color: #e5e7eb; font-size: 1.2rem;" title="Not Submitted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.quarters.Q4 %}
+                                    <i class="fas fa-check-circle" style="color: #10b981; font-size: 1.2rem;" title="Submitted"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle" style="color: #e5e7eb; font-size: 1.2rem;" title="Not Submitted"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {% widthratio item.total_submitted 4 100 %}%; background-color: #6366f1;" 
+                                         aria-valuenow="{{ item.total_submitted }}" aria-valuemin="0" aria-valuemax="4">
+                                        {{ item.total_submitted }}/4
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center" style="padding: 2rem;">
+                                <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+                                <p style="color: #64748b; margin: 0;">No accepted grants yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Chart -->
+    <div class="col-lg-5">
+        <div class="table-card">
+            <h5 style="margin: 0 0 1.5rem 0; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-chart-bar"></i> Submissions by Quarter
+            </h5>
+            <canvas id="quarterlyChart" style="max-height: 300px;"></canvas>
+            
+            <!-- Summary Stats -->
+            <div class="mt-4">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div style="padding: 1rem; background: #f0fdf4; border-radius: 8px;">
+                            <h3 style="margin: 0; color: #10b981; font-weight: 700;">{{ total_grantees }}</h3>
+                            <small style="color: #64748b; font-weight: 500;">Total Grantees</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div style="padding: 1rem; background: #eff6ff; border-radius: 8px;">
+                            <h3 style="margin: 0; color: #6366f1; font-weight: 700;">{{ reports|length }}</h3>
+                            <small style="color: #64748b; font-weight: 500;">Total Reports</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Table -->
+<div class="table-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 600;">
+            <i class="fas fa-chart-line"></i> Quarterly Reports Submissions
+        </h5>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button class="btn btn-sm btn-outline-primary" style="border-radius: 8px; margin-left: 0.5rem;">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Grant Title</th>
+                    <th>Grantee</th>
+                    <th>Email</th>
+                    <th>Quarter</th>
+                    <th>Submitted On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #1e293b;">{{ report.application.grant }}</div>
+                    </td>
+                    <td>{{ report.application.name }}</td>
+                    <td><small style="color: #64748b;">{{ report.application.email }}</small></td>
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            <i class="fas fa-calendar"></i> {{ report.quarter }}
+                        </span>
+                    </td>
+                    <td><small>{{ report.submitted_on|date:"M d, Y H:i" }}</small></td>
+                    <td>
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> Submitted
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ report.report_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="View Report">
+                            <i class="fas fa-file-pdf"></i> View
+                        </a>
+                        <a href="{{ report.report_file.url }}" download class="btn btn-sm btn-outline-secondary" title="Download Report">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 3rem;">
+                        <i class="fas fa-file-invoice" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <p style="color: #64748b; margin: 0; font-weight: 500;">No reports submitted yet.</p>
+                        <small style="color: #94a3b8;">Reports will appear here once grantees submit their quarterly updates.</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Report Guidelines Card -->
+<div class="content-card" style="margin-top: 2rem;">
+    <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i> Report Submission Guidelines
+    </h5>
+    <div class="row">
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-calendar-alt"></i> Quarterly Schedule
+                </h6>
+                <small style="color: #64748b;">Reports are due at the end of each quarter (Q1, Q2, Q3, Q4)</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-file-alt"></i> Required Format
+                </h6>
+                <small style="color: #64748b;">Reports must be submitted in PDF format with all required sections</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-clock"></i> Review Process
+                </h6>
+                <small style="color: #64748b;">All reports are reviewed within 5 business days of submission</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Quarterly submissions chart
+    const ctx = document.getElementById('quarterlyChart').getContext('2d');
+    const quarterlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+            datasets: [{
+                label: 'Reports Submitted',
+                data: [
+                    {{ quarter_stats.Q1 }},
+                    {{ quarter_stats.Q2 }},
+                    {{ quarter_stats.Q3 }},
+                    {{ quarter_stats.Q4 }}
+                ],
+                backgroundColor: [
+                    'rgba(99, 102, 241, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(99, 102, 241, 1)',
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(239, 68, 68, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' grantee' + (context.parsed.y !== 1 ? 's' : '') + ' submitted';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

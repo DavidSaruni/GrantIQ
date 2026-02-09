@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - GrantIQ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-hand-holding-usd"></i> GrantIQ</h3>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.8;">Admin Dashboard</p>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="{% url 'admin_dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'application_list' %}" class="menu-item {% if request.resolver_match.url_name == 'application_list' or request.resolver_match.url_name == 'view_application' or request.resolver_match.url_name == 'review_application' %}active{% endif %}">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Applications</span>
+                </a>
+                <a href="{% url 'assign_reviewers' %}" class="menu-item {% if request.resolver_match.url_name == 'assign_reviewers' %}active{% endif %}">
+                    <i class="fas fa-user-check"></i>
+                    <span>Assign Reviewers</span>
+                </a>
+                <a href="{% url 'promote_reviewer' %}" class="menu-item {% if request.resolver_match.url_name == 'promote_reviewer' %}active{% endif %}">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Promote Users</span>
+                </a>
+                <a href="{% url 'monitor_reports' %}" class="menu-item {% if request.resolver_match.url_name == 'monitor_reports' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Monitor Reports</span>
+                </a>
+                <a href="{% url 'create_grant' %}" class="menu-item {% if request.resolver_match.url_name == 'create_grant' %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create New Grant</span>
+                </a>
+                <a href="{% url 'grants' %}" class="menu-item {% if request.resolver_match.url_name == 'grants' %}active{% endif %}">
+                    <i class="fas fa-list"></i>
+                    <span>View Grants</span>
+                </a>
+                <a href="/staff/" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Django Admin</span>
+                </a>
+                <a href="{% url 'index' %}" class="menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>Back to Site</span>
+                </a>
+                <a href="{% url 'logout' %}" class="menu-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+                    <p>Hi {{ user.first_name|default:user.email }}, Good {% now "A" %}!</p>
+                </div>
+                <div>
+                    <span style="color: #64748b;"><i class="fas fa-user-circle"></i> {{ user.email }}</span>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Logout Form -->
+    <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: none;">
+        {% csrf_token %}
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

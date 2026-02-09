@@ -1,109 +1,196 @@
-{% extends 'base.html' %}
-{% block title %} User Dashboard {% endblock %}
+{% extends 'user_base.html' %}
+
+{% block title %}My Dashboard{% endblock %}
+{% block page_title %}My Applications{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-modern {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-
-<section class="py-5">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-12">
-        <h1 class="display-4 py-5 text-dark">User Dashboard</h1>
-        <p class="lead">Manage your Grantiq account</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Alerts -->
 {% include 'partials/_alerts.html' %}
 
-<section id="dashboard" class="py-4">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h2>Welcome {{ user.first_name }}!</h2>
-
-        <!-- Filters -->
-        <form method="GET" class="row g-3 mb-4">
-          <div class="col-md-4">
-            <input type="text" name="q" placeholder="Search by title..." class="form-control" value="{{ request.GET.q }}">
-          </div>
-          <div class="col-md-4">
-            <select name="status" class="form-select">
-              <option value="">All Statuses</option>
-              <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
-              <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
-              <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <button type="submit" class="btn btn-primary">Filter</button>
-          </div>
-        </form>
-
-        {% if applications %}
-        <p>Here are the grants you have applied for:</p>
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Grant Title</th>
-              <th>Status</th>
-              <th>Submitted On</th>
-              <th>Last Updated</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for application in applications %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td>{{ application.job }}</td>
-              <td>
-                {% if application.status == 'pending' %}
-                  <span class="badge bg-warning text-dark">Pending</span>
-                {% elif application.status == 'accepted' %}
-                  <span class="badge bg-success">Accepted</span>
-                {% elif application.status == 'rejected' %}
-                  <span class="badge bg-danger">Rejected</span>
-                {% endif %}
-              </td>
-              <td>{{ application.submitted_at|date:"M d, Y" }}</td>
-              <td>{{ application.updated_at|date:"M d, Y" }}</td>
-              <td>
-                {% if application.status == 'accepted' %}
-                  <a class="btn btn-outline-primary btn-sm" href="{% url 'upload_quarterly_report' application.id %}">Upload Report</a>
-                {% else %}
-                  <a class="btn btn-outline-secondary btn-sm" href="{% url 'view_application' application.id %}">View Grant</a>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-
-        <!-- Pagination -->
-        <nav aria-label="Page navigation">
-          <ul class="pagination">
-            {% if applications.has_previous %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ applications.previous_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Previous</a>
-              </li>
-            {% endif %}
-            <li class="page-item active"><span class="page-link">Page {{ applications.number }} of {{ applications.paginator.num_pages }}</span></li>
-            {% if applications.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ applications.next_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Next</a>
-              </li>
-            {% endif %}
-          </ul>
-        </nav>
-
-        {% else %}
-          <p>You have not made any applications yet!</p>
-        {% endif %}
-      </div>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h6>Total Applications</h6>
+        <h2>{{ applications.paginator.count|default:0 }}</h2>
     </div>
-  </div>
-</section>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h6>Pending</h6>
+        <h2>{{ pending_count|default:0 }}</h2>
+    </div>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h6>Accepted</h6>
+        <h2>{{ accepted_count|default:0 }}</h2>
+    </div>
+    <div class="stat-card danger">
+        <div class="icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <h6>Rejected</h6>
+        <h2>{{ rejected_count|default:0 }}</h2>
+    </div>
+</div>
 
+<!-- Applications Table -->
+<div class="content-card">
+    <h4 style="margin-bottom: 1.5rem; color: #1e293b; font-weight: 600;">
+        <i class="fas fa-list"></i> My Applications
+    </h4>
+    
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">
+                    <i class="fas fa-search"></i> Search
+                </label>
+                <input type="text" name="q" placeholder="Search by grant title..." class="form-control" value="{{ request.GET.q }}" style="border-radius: 8px;">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">
+                    <i class="fas fa-filter"></i> Status
+                </label>
+                <select name="status" class="form-select" style="border-radius: 8px;">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="opacity: 0;">Action</label>
+                <button type="submit" class="btn btn-primary w-100 btn-modern">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% if applications %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Grant Title</th>
+                    <th>Status</th>
+                    <th>Submitted On</th>
+                    <th>Last Updated</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #1e293b;">{{ application.grant }}</div>
+                    </td>
+                    <td>
+                        {% if application.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% elif application.status == 'accepted' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Accepted
+                            </span>
+                        {% elif application.status == 'rejected' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle"></i> Rejected
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ application.created_at|date:"M d, Y" }}</small></td>
+                    <td><small>{{ application.updated_at|date:"M d, Y" }}</small></td>
+                    <td>
+                        {% if application.status == 'accepted' %}
+                            <a class="btn btn-sm btn-success btn-modern" href="{% url 'upload_quarterly_report' application.id %}">
+                                <i class="fas fa-upload"></i> Upload Report
+                            </a>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-primary btn-modern" href="{% url 'view_application' application.id %}">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if applications.has_previous or applications.has_next %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if applications.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ applications.previous_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}" style="border-radius: 8px 0 0 8px;">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ applications.number }} of {{ applications.paginator.num_pages }}</span>
+            </li>
+            {% if applications.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ applications.next_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}" style="border-radius: 0 8px 8px 0;">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h4 style="color: #64748b; margin-bottom: 0.5rem;">No Applications Yet</h4>
+        <p style="color: #94a3b8; margin-bottom: 1.5rem;">You haven't applied for any grants yet. Start exploring available opportunities!</p>
+        <a href="{% url 'grants' %}" class="btn btn-primary btn-lg btn-modern">
+            <i class="fas fa-search"></i> Browse Available Grants
+        </a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

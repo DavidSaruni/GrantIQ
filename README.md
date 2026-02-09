@@ -1,6 +1,6 @@
 ## Description
 
-Job portal is a web application where the candidates can register  and search for suitable jobs and employers can register to post job vacancies at their company. The application provides job catalogue and information which helps the candidates decide which jobs to apply for. 
+Grantiq is a web application where applicants can register and search for suitable grants and organizations can register to post grant opportunities. The application provides a grants catalogue and information which helps applicants decide which grants to apply for. 
 
 The 3 user roles are Candidate , Employer and Admin
 

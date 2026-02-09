@@ -1,0 +1,227 @@
+{% extends 'user_base.html' %}
+
+{% block title %}My Grants{% endblock %}
+{% block page_title %}My Grants{% endblock %}
+
+{% block extra_css %}
+<style>
+    .grant-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+        border-left: 4px solid #10b981;
+    }
+    
+    .grant-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .grant-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .grant-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .grant-meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+    
+    .grant-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .grant-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    
+    .empty-grants {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+    }
+    
+    .empty-grants i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<!-- Stats Card -->
+<div class="stat-card success" style="margin-bottom: 2rem;">
+    <div class="icon">
+        <i class="fas fa-award"></i>
+    </div>
+    <h6>Active Grants</h6>
+    <h2>{{ total_grants }}</h2>
+</div>
+
+<!-- Grants List -->
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 style="margin: 0; color: #1e293b; font-weight: 600;">
+            <i class="fas fa-briefcase"></i> My Approved Grants
+        </h4>
+        <a href="{% url 'grants' %}" class="btn btn-outline-primary" style="border-radius: 8px;">
+            <i class="fas fa-search"></i> Browse More Grants
+        </a>
+    </div>
+    
+    {% if grants %}
+        {% for grant in grants %}
+        <div class="grant-card">
+            <div class="grant-header">
+                <div style="flex: 1;">
+                    <div class="grant-title">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        {{ grant.grant }}
+                    </div>
+                    <div class="grant-meta">
+                        <div class="grant-meta-item">
+                            <i class="fas fa-building"></i>
+                            <span>{{ grant.creator }}</span>
+                        </div>
+                        <div class="grant-meta-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Approved: {{ grant.updated_at|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="grant-meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>{{ grant.name }}</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="badge bg-success" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <i class="fas fa-check"></i> Approved
+                </span>
+            </div>
+            
+            <!-- Grant Details -->
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <small style="color: #64748b; display: block; margin-bottom: 0.25rem;">Email</small>
+                        <strong style="color: #1e293b;">{{ grant.email }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small style="color: #64748b; display: block; margin-bottom: 0.25rem;">Phone</small>
+                        <strong style="color: #1e293b;">{{ grant.phone }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small style="color: #64748b; display: block; margin-bottom: 0.25rem;">Application Date</small>
+                        <strong style="color: #1e293b;">{{ grant.created_at|date:"M d, Y" }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reviewer Comments -->
+            {% if grant.review_comments %}
+            <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h6 style="color: #3b82f6; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-comment-dots"></i> Reviewer Comments
+                </h6>
+                <p style="color: #64748b; margin: 0; font-size: 0.875rem;">{{ grant.review_comments }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="grant-actions">
+                <a href="{% url 'upload_quarterly_report' grant.id %}" class="btn btn-success" style="border-radius: 8px;">
+                    <i class="fas fa-upload"></i> Upload Quarterly Report
+                </a>
+                <a href="#" class="btn btn-outline-primary" style="border-radius: 8px;">
+                    <i class="fas fa-comments"></i> View Communications
+                </a>
+                <a href="#" class="btn btn-outline-secondary" style="border-radius: 8px;">
+                    <i class="fas fa-file-alt"></i> View Proposal
+                </a>
+                {% if grant.reviewer %}
+                <button class="btn btn-outline-info" style="border-radius: 8px;" disabled>
+                    <i class="fas fa-user-tie"></i> Reviewer: {{ grant.reviewer.get_full_name }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-grants">
+            <i class="fas fa-inbox"></i>
+            <h4 style="color: #64748b; margin-bottom: 0.5rem;">No Approved Grants Yet</h4>
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">
+                You don't have any approved grants at the moment. Once your applications are approved, they will appear here for you to manage.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="{% url 'grants' %}" class="btn btn-primary" style="border-radius: 8px;">
+                    <i class="fas fa-search"></i> Browse Available Grants
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary" style="border-radius: 8px;">
+                    <i class="fas fa-list"></i> View My Applications
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Help Section -->
+{% if grants %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="content-card" style="background: #f0fdf4; border-left: 4px solid #10b981;">
+            <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.75rem;">
+                <i class="fas fa-calendar-check"></i> Quarterly Reports
+            </h6>
+            <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
+                Submit your quarterly reports on time to maintain your grant status and ensure continued funding.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+            <h6 style="color: #3b82f6; font-weight: 600; margin-bottom: 0.75rem;">
+                <i class="fas fa-comments"></i> Stay Connected
+            </h6>
+            <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
+                Respond promptly to communications from grant managers and reviewers to maintain good standing.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+            <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.75rem;">
+                <i class="fas fa-exclamation-triangle"></i> Important
+            </h6>
+            <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
+                Failure to submit reports or respond to communications may result in grant suspension or termination.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

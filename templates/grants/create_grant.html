@@ -1,0 +1,206 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Create Grant{% endblock %}
+{% block page_title %}Create New Grant{% endblock %}
+
+{% block content %}
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<!-- Form Card -->
+<div class="content-card" style="max-width: 1000px; margin: 0 auto;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 style="margin: 0; color: #1e293b; font-weight: 600;">
+            <i class="fas fa-plus-circle" style="color: #6366f1;"></i> Grant Information
+        </h4>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <form action="{% url 'create_grant' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Basic Information Section -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h5 style="color: #6366f1; font-weight: 600; margin-bottom: 1.5rem;">
+                <i class="fas fa-info-circle"></i> Basic Information
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="company" class="form-label">
+                        <i class="fas fa-building"></i> Funding Organization *
+                    </label>
+                    <input type="text" name="company" id="company" class="form-control" required autocomplete="off" placeholder="e.g., Gates Foundation">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="title" class="form-label">
+                        <i class="fas fa-heading"></i> Grant Title *
+                    </label>
+                    <input type="text" name="title" id="title" class="form-control" required autocomplete="off" placeholder="e.g., Community Development Grant">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="role" class="form-label">
+                        <i class="fas fa-tag"></i> Grant Category *
+                    </label>
+                    <input type="text" name="role" id="role" class="form-control" required autocomplete="off" placeholder="e.g., Education, Health, Technology">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="location" class="form-label">
+                        <i class="fas fa-map-marker-alt"></i> Location *
+                    </label>
+                    <select name="location" id="location" class="form-select" required>
+                        <option value="" selected disabled>Select Location</option>
+                        <option value="Nairobi">Nairobi</option>
+                        <option value="Mombasa">Mombasa</option>
+                        <option value="Kisumu">Kisumu</option>
+                        <option value="Nakuru">Nakuru</option>
+                        <option value="Eldoret">Eldoret</option>
+                        <option value="Kakamega">Kakamega</option>
+                        <option value="Nyeri">Nyeri</option>
+                        <option value="Remote">Remote</option>
+                        <option value="Nationwide">Nationwide</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eligibility & Funding Section -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h5 style="color: #10b981; font-weight: 600; margin-bottom: 1.5rem;">
+                <i class="fas fa-check-circle"></i> Eligibility & Funding Details
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="contract" class="form-label">
+                        <i class="fas fa-user-check"></i> Eligibility Type *
+                    </label>
+                    <select name="contract" id="contract" class="form-select" required>
+                        <option value="" selected disabled>Select Eligibility</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Freelance">Freelancer</option>
+                        <option value="Organization">Organization</option>
+                        <option value="Individual">Individual</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="vacancy" class="form-label">
+                        <i class="fas fa-users"></i> No. of Projects to Support *
+                    </label>
+                    <input type="number" name="vacancy" id="vacancy" class="form-control" required autocomplete="off" placeholder="e.g., 10" min="1">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="experience" class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Duration (Months) *
+                    </label>
+                    <input type="number" name="experience" id="experience" class="form-control" required autocomplete="off" placeholder="e.g., 12" min="1">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="salary" class="form-label">
+                        <i class="fas fa-dollar-sign"></i> Funds per Project (KES) *
+                    </label>
+                    <input type="number" name="salary" id="salary" class="form-control" required autocomplete="off" placeholder="e.g., 500000" min="0">
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label for="deadline" class="form-label">
+                        <i class="fas fa-clock"></i> Application Deadline *
+                    </label>
+                    <input type="datetime-local" name="deadline" id="deadline" class="form-control" required>
+                    <small class="text-muted">Select the date and time when applications will close</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h5 style="color: #f59e0b; font-weight: 600; margin-bottom: 1.5rem;">
+                <i class="fas fa-file-alt"></i> Detailed Description
+            </h5>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">
+                    <i class="fas fa-align-left"></i> Grant Description *
+                </label>
+                <textarea name="description" id="description" rows="5" class="form-control" required placeholder="Provide a detailed description of the grant, including objectives, expected outcomes, and any specific requirements..."></textarea>
+                <small class="text-muted">Describe what the grant aims to achieve and who should apply</small>
+            </div>
+
+            <div class="mb-3">
+                <label for="about" class="form-label">
+                    <i class="fas fa-building"></i> About the Organization *
+                </label>
+                <textarea name="about" id="about" rows="4" class="form-control" required placeholder="Tell us about the funding organization, its mission, and previous grant programs..."></textarea>
+                <small class="text-muted">Provide background information about the funding organization</small>
+            </div>
+        </div>
+
+        <!-- Image Upload Section -->
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h5 style="color: #8b5cf6; font-weight: 600; margin-bottom: 1.5rem;">
+                <i class="fas fa-image"></i> Grant Image
+            </h5>
+            
+            <div class="mb-3">
+                <label for="main_image" class="form-label">
+                    <i class="fas fa-upload"></i> Main Image *
+                </label>
+                <input type="file" name="main_image" id="main_image" class="form-control" required accept="image/*">
+                <small class="text-muted">Upload a representative image for this grant (JPG, PNG, max 5MB)</small>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end gap-2" style="gap: 1rem;">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary" style="border-radius: 8px; padding: 0.75rem 1.5rem;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary-modern">
+                <i class="fas fa-check"></i> Create Grant
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Help Card -->
+<div class="content-card" style="max-width: 1000px; margin: 2rem auto;">
+    <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+        <i class="fas fa-question-circle"></i> Need Help?
+    </h5>
+    <div class="row">
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                <h6 style="color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-lightbulb"></i> Grant Title Tips
+                </h6>
+                <small style="color: #64748b;">Use clear, descriptive titles that indicate the grant's purpose and target audience</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-dollar-sign"></i> Funding Amount
+                </h6>
+                <small style="color: #64748b;">Specify the exact amount available per project to help applicants plan accordingly</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-calendar"></i> Deadline Setting
+                </h6>
+                <small style="color: #64748b;">Allow sufficient time for applicants to prepare quality proposals (typically 2-4 weeks)</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
