@@ -25,8 +25,8 @@ SECRET_KEY = 'ih)tbnc6#9e+$r*=fu&urnnv7m=b(lzl4%#b+0v#vg(517aqec'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
 
+ALLOWED_HOSTS = ['grantiq.co.ke', 'www.grantiq.co.ke', '151.80.4.15']
 
 # Application definition
 AUTH_USER_MODEL = 'accounts.User'
@@ -84,11 +84,11 @@ WSGI_APPLICATION = 'grantiq.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'grant_portal',
-        'USER': 'postgres',
-        'PASSWORD': 'secretpS',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'vhxgfnkk_grantiq',
+        'USER': 'vhxgfnkk_captain',
+        'PASSWORD': 'Captain@01',
+        'PORT': '3306',
         'HOST': 'localhost',
     }
 }
