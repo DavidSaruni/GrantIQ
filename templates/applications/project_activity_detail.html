@@ -1,0 +1,153 @@
+{% extends user.role == 'ADMIN' or user.role == 'GRANT_MANAGER'|yesno:'admin_base.html,user_base.html' %}
+
+{% block title %}Activity Detail{% endblock %}
+{% block page_title %}Activity - {{ activity.name }}{% endblock %}
+
+{% block content %}
+
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<div class="row" style="margin-top: 1rem;">
+    <div class="col-lg-7">
+        <div class="content-card">
+            <h4 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-clipboard-list"></i> {{ activity.name }}
+            </h4>
+            <p style="color: #64748b;">
+                {{ activity.description|default:"No description provided for this activity." }}
+            </p>
+
+            <div class="mb-3">
+                <strong>Project:</strong> {{ activity.application.grant }}<br>
+                <strong>Grantee:</strong> {{ activity.application.name }} ({{ activity.application.email }})<br>
+                {% if activity.due_date %}
+                <strong>Due Date:</strong> {{ activity.due_date|date:"M d, Y" }}
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <strong>Status:</strong>
+                {% if activity.status == 'pending' %}
+                    <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Pending</span>
+                {% elif activity.status == 'submitted' %}
+                    <span class="badge bg-info text-dark"><i class="fas fa-paper-plane"></i> Submitted</span>
+                {% elif activity.status == 'approved' %}
+                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Approved</span>
+                {% elif activity.status == 'rejected' %}
+                    <span class="badge bg-danger"><i class="fas fa-times-circle"></i> Rejected</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <strong>Latest Submission:</strong><br>
+                {% if activity.submission_file %}
+                    <a href="{{ activity.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
+                        <i class="fas fa-file-alt"></i> View Submission
+                    </a>
+                    {% if activity.submitted_at %}
+                        <small class="text-muted d-block mt-1">Submitted on {{ activity.submitted_at|date:"M d, Y H:i" }}</small>
+                    {% endif %}
+                {% else %}
+                    <small class="text-muted">No submission yet.</small>
+                {% endif %}
+            </div>
+
+            {% if user.email == activity.application.email %}
+            <!-- Grantee upload form -->
+            <hr>
+            <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-upload"></i> Submit / Resubmit Activity
+            </h5>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Upload file (PDF, DOCX, XLS/XLSX)
+                    </label>
+                    <input type="file" name="submission_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" required>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary" style="border-radius: 8px;">
+                        <i class="fas fa-paper-plane"></i> Submit Activity
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+
+            {% if user.role == 'ADMIN' or user.role == 'GRANT_MANAGER' %}
+            <!-- Grant manager approval controls -->
+            <hr>
+            <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-check-circle"></i> Review Submission
+            </h5>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="review">
+                <div class="mb-3">
+                    <label class="form-label">Decision</label>
+                    <select name="decision" class="form-select" required>
+                        <option value="">Select...</option>
+                        <option value="approve">Approve</option>
+                        <option value="reject">Reject</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Comment to grantee (optional)</label>
+                    <textarea name="review_comment" rows="3" class="form-control" placeholder="Share feedback or next steps..."></textarea>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success" style="border-radius: 8px;">
+                        <i class="fas fa-save"></i> Save Decision
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="content-card">
+            <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-comments"></i> Discussion
+            </h5>
+
+            <div style="max-height: 350px; overflow-y: auto; margin-bottom: 1rem;">
+                {% for comment in comments %}
+                <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.875rem; color: #1f2933; font-weight: 600;">
+                        <i class="fas fa-user-circle"></i>
+                        {{ comment.author.get_full_name|default:comment.author.email }}
+                    </div>
+                    <div style="font-size: 0.875rem; color: #4b5563; margin-top: 0.25rem;">
+                        {{ comment.message|linebreaksbr }}
+                    </div>
+                    <small class="text-muted">
+                        {{ comment.created_at|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                {% empty %}
+                <p class="text-muted">No comments yet. Start the conversation below.</p>
+                {% endfor %}
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="comment">
+                <div class="mb-3">
+                    <label class="form-label">Add a comment</label>
+                    <textarea name="message" rows="3" class="form-control" required placeholder="Share feedback, ask a question, or respond..."></textarea>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary" style="border-radius: 8px;">
+                        <i class="fas fa-comment-dots"></i> Post Comment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

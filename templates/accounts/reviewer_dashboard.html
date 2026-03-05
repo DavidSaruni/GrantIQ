@@ -1,110 +1,159 @@
-{% extends 'base.html' %}
-{% block title %} Reviewer Dashboard {% endblock %}
-{% block content %}
+{% extends 'admin_base.html' %}
 
-<section class="py-5">
-  <div class="container">
-    <div class="row text-center">
-      <div class="col-md-12">
-        <h1 class="display-4 py-5 text-dark">Reviewer Dashboard</h1>
-        <p class="lead">Review and manage grant applications assigned to you</p>
-      </div>
-    </div>
-  </div>
-</section>
+{% block title %}Reviewer Dashboard{% endblock %}
+{% block page_title %}Reviewer Dashboard{% endblock %}
+
+{% block content %}
 
 <!-- Alerts -->
 {% include 'partials/_alerts.html' %}
 
-<section id="dashboard" class="py-4">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h2>Welcome {{ user.first_name }}!</h2>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h6>Total Assigned</h6>
+        <h2>{{ total_assigned|default:0 }}</h2>
+    </div>
+    <div class="stat-card warning">
+        <div class="icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h6>Pending Review</h6>
+        <h2>{{ pending_count|default:0 }}</h2>
+    </div>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h6>Reviewed (Accepted/Rejected)</h6>
+        <h2>{{ reviewed_count|default:0 }}</h2>
+    </div>
+</div>
 
-        <!-- Filters -->
-        <form method="GET" class="row g-3 mb-4">
-          <div class="col-md-4">
-            <input type="text" name="q" placeholder="Search by title..." class="form-control" value="{{ request.GET.q }}">
-          </div>
-          <div class="col-md-4">
-            <select name="status" class="form-select">
-              <option value="">All Statuses</option>
-              <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
-              <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
-              <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <button type="submit" class="btn btn-primary">Filter</button>
-          </div>
+<!-- Applications Table -->
+<div class="content-card">
+    <h4 style="margin-bottom: 1.5rem; color: #1e293b; font-weight: 600;">
+        <i class="fas fa-list"></i> Applications Assigned to You
+    </h4>
+
+    <!-- Filters -->
+    <div class="filter-section" style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+        <form method="GET" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">
+                    <i class="fas fa-search"></i> Search
+                </label>
+                <input type="text" name="q" placeholder="Search by grant title..." class="form-control" value="{{ request.GET.q }}" style="border-radius: 8px;">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #64748b;">
+                    <i class="fas fa-filter"></i> Status
+                </label>
+                <select name="status" class="form-select" style="border-radius: 8px;">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="accepted" {% if request.GET.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" style="opacity: 0;">Action</label>
+                <button type="submit" class="btn btn-primary w-100" style="border-radius: 8px;">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+            </div>
         </form>
+    </div>
 
-        {% if review_applications %}
-        <p>Applications assigned to you for review:</p>
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Grant Title</th>
-              <th>Applicant</th>
-              <th>Status</th>
-              <th>Submitted On</th>
-              <th>Last Updated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for application in review_applications %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td>{{ application.job.title }}</td>
-              <td>{{ application.name }}</td>
-              <td>
-                {% if application.status == 'pending' %}
-                  <span class="badge bg-warning text-dark">Pending</span>
-                {% elif application.status == 'accepted' %}
-                  <span class="badge bg-success">Accepted</span>
-                {% elif application.status == 'rejected' %}
-                  <span class="badge bg-danger">Rejected</span>
-                {% endif %}
-              </td>
-              <td>{{ application.created_at|date:"M d, Y" }}</td>
-              <td>{{ application.updated_at|date:"M d, Y" }}</td>
-              <td>
-                <a href="{% url 'view_application' application.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                <a href="{% url 'review_application' application.id %}" class="btn btn-outline-primary btn-sm">Review</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
+    {% if review_applications %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Grant Title</th>
+                    <th>Applicant</th>
+                    <th>Status</th>
+                    <th>Submitted On</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in review_applications %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #1e293b;">{{ application.grant }}</div>
+                        <small style="color: #64748b;">{{ application.email }}</small>
+                    </td>
+                    <td>{{ application.name }}</td>
+                    <td>
+                        {% if application.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% elif application.status == 'accepted' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Accepted
+                            </span>
+                        {% elif application.status == 'rejected' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle"></i> Rejected
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ application.created_at|date:"M d, Y" }}</small></td>
+                    <td><small>{{ application.updated_at|date:"M d, Y" }}</small></td>
+                    <td>
+                        <a href="{% url 'view_application' application.id %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="{% url 'review_application' application.id %}" class="btn btn-sm btn-primary" style="border-radius: 6px; margin-left: 0.25rem;">
+                            <i class="fas fa-pen"></i> Review
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
+    </div>
 
-        <!-- Pagination -->
-        <nav aria-label="Page navigation">
-          <ul class="pagination">
+    <!-- Pagination -->
+    {% if review_applications.has_previous or review_applications.has_next %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
             {% if review_applications.has_previous %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ review_applications.previous_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Previous</a>
-              </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ review_applications.previous_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}" style="border-radius: 8px 0 0 8px;">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
             {% endif %}
             <li class="page-item active">
-              <span class="page-link">Page {{ review_applications.number }} of {{ review_applications.paginator.num_pages }}</span>
+                <span class="page-link">Page {{ review_applications.number }} of {{ review_applications.paginator.num_pages }}</span>
             </li>
             {% if review_applications.has_next %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ review_applications.next_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}">Next</a>
-              </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ review_applications.next_page_number }}&q={{ request.GET.q }}&status={{ request.GET.status }}" style="border-radius: 0 8px 8px 0;">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
             {% endif %}
-          </ul>
-        </nav>
+        </ul>
+    </nav>
+    {% endif %}
 
-        {% else %}
-          <p>No applications assigned to you yet.</p>
-        {% endif %}
-      </div>
+    {% else %}
+    <div class="empty-state" style="text-align: center; padding: 4rem 2rem;">
+        <i class="fas fa-inbox" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h4 style="color: #64748b; margin-bottom: 0.5rem;">No Applications Assigned</h4>
+        <p style="color: #94a3b8; margin-bottom: 0;">You don't have any applications to review yet. Once assigned, they'll appear here.</p>
     </div>
-  </div>
-</section>
+    {% endif %}
+</div>
 
 {% endblock %}

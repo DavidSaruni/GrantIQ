@@ -1,0 +1,145 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Grant Activities{% endblock %}
+{% block page_title %}Manage Activities - {{ grant.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h6>Total Activities</h6>
+        <h2>{{ activities|length }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="content-card">
+            <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                {% if activity_to_edit %}
+                    <i class="fas fa-edit"></i> Edit Activity
+                {% else %}
+                    <i class="fas fa-plus-circle"></i> Add Activity
+                {% endif %}
+            </h5>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="{% if activity_to_edit %}update{% else %}add{% endif %}">
+                {% if activity_to_edit %}
+                    <input type="hidden" name="activity_id" value="{{ activity_to_edit.id }}">
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-heading"></i> Activity Name
+                    </label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. Inception Report" value="{{ activity_to_edit.name|default_if_none:'' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i> Description (optional)
+                    </label>
+                    <textarea name="description" rows="3" class="form-control" placeholder="Short description of this activity">{{ activity_to_edit.description|default_if_none:'' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-sort-numeric-down"></i> Order
+                        </label>
+                        <input type="number" name="order" class="form-control" min="1" value="{% if activity_to_edit %}{{ activity_to_edit.order }}{% else %}{{ activities|length|add:1 }}{% endif %}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-clock"></i> Due in (days)
+                        </label>
+                        <input type="number" name="default_due_days" class="form-control" min="1" value="{% if activity_to_edit %}{{ activity_to_edit.default_due_days }}{% else %}30{% endif %}">
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    {% if activity_to_edit %}
+                        <button type="submit" class="btn btn-primary" style="border-radius: 8px;">
+                            <i class="fas fa-save"></i> Update Activity
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary" style="border-radius: 8px;">
+                            <i class="fas fa-plus"></i> Add Activity
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="table-card">
+            <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
+                <i class="fas fa-list"></i> Activities for {{ grant.title }}
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Activity</th>
+                            <th>Default Due (days)</th>
+                            <th style="width: 110px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr>
+                            <td>{{ activity.order }}</td>
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">{{ activity.name }}</div>
+                                {% if activity.description %}
+                                <small style="color: #64748b;">{{ activity.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ activity.default_due_days }}</td>
+                            <td>
+                                <form method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="edit">
+                                    <input type="hidden" name="activity_id" value="{{ activity.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" style="display:inline; margin-left: 4px;" onsubmit="return confirm('Delete this activity?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="activity_id" value="{{ activity.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 6px;" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center" style="padding: 2rem;">
+                                <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
+                                <p style="color: #64748b; margin: 0;">No activities defined for this grant yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import EmptyPage, PageNotAnInteger,Paginator
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from .choices import location_choices, contract_choices
-from .models import Grant 
+from .models import Grant, GrantActivity
 from .forms import GrantForm  # Import GrantForm
 from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from datetime import datetime
 
@@ -114,7 +114,6 @@ def create_grant(request):
                 grant_date=datetime.now()
             )
 
-            grant.save()
             messages.success(request, 'Grant created successfully.')
             return redirect('admin_dashboard')
 
@@ -124,3 +123,98 @@ def create_grant(request):
 
     else:
         return render(request, 'grants/create_grant.html')
+
+
+def is_admin_or_grant_manager(user):
+    return user.is_authenticated and getattr(user, "role", "") in ["ADMIN", "GRANT_MANAGER"]
+
+
+@login_required
+@user_passes_test(is_admin_or_grant_manager)
+def manage_grants(request):
+    from applications.models import Application
+
+    grants = Grant.objects.all().order_by("-grant_date")
+
+    grant_rows = []
+    for grant in grants:
+        accepted_projects = Application.objects.filter(
+            status="accepted", grant_id=grant.id
+        )
+        grant_rows.append(
+            {
+                "grant": grant,
+                "accepted_count": accepted_projects.count(),
+                "accepted_projects": accepted_projects,
+            }
+        )
+
+    context = {
+        "grant_rows": grant_rows,
+        "total_grants": len(grant_rows),
+        "total_accepted_projects": sum(r["accepted_count"] for r in grant_rows),
+    }
+
+    return render(request, "grants/manage_grants.html", context)
+
+
+@login_required
+@user_passes_test(is_admin_or_grant_manager)
+def manage_grant_activities(request, grant_id):
+    grant = get_object_or_404(Grant, pk=grant_id)
+
+    activity_to_edit = None
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action in ["add", "update"]:
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            order = request.POST.get("order") or 1
+            default_due_days = request.POST.get("default_due_days") or 30
+
+            if not name:
+                messages.error(request, "Activity name is required.")
+            else:
+                if action == "add":
+                    GrantActivity.objects.create(
+                        grant=grant,
+                        name=name,
+                        description=description,
+                        order=int(order),
+                        default_due_days=int(default_due_days),
+                    )
+                    messages.success(request, "Activity added successfully.")
+                else:
+                    activity_id = request.POST.get("activity_id")
+                    activity = get_object_or_404(
+                        GrantActivity, pk=activity_id, grant=grant
+                    )
+                    activity.name = name
+                    activity.description = description
+                    activity.order = int(order)
+                    activity.default_due_days = int(default_due_days)
+                    activity.save()
+                    messages.success(request, "Activity updated successfully.")
+            return redirect("manage_grant_activities", grant_id=grant.id)
+
+        elif action == "delete":
+            activity_id = request.POST.get("activity_id")
+            activity = get_object_or_404(GrantActivity, pk=activity_id, grant=grant)
+            activity.delete()
+            messages.success(request, "Activity deleted successfully.")
+            return redirect("manage_grant_activities", grant_id=grant.id)
+
+        elif action == "edit":
+            activity_id = request.POST.get("activity_id")
+            activity_to_edit = get_object_or_404(
+                GrantActivity, pk=activity_id, grant=grant
+            )
+
+    activities = GrantActivity.objects.filter(grant=grant).order_by("order")
+
+    return render(
+        request,
+        "grants/manage_grant_activities.html",
+        {"grant": grant, "activities": activities, "activity_to_edit": activity_to_edit},
+    )

@@ -1,0 +1,113 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Grants{% endblock %}
+{% block page_title %}Manage Grants{% endblock %}
+
+{% block content %}
+
+<!-- Alerts -->
+{% include 'partials/_alerts.html' %}
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+    <div class="stat-card primary">
+        <div class="icon">
+            <i class="fas fa-gift"></i>
+        </div>
+        <h6>Total Grants</h6>
+        <h2>{{ total_grants }}</h2>
+    </div>
+    <div class="stat-card success">
+        <div class="icon">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <h6>Accepted Projects</h6>
+        <h2>{{ total_accepted_projects }}</h2>
+    </div>
+</div>
+
+<!-- Grants Table -->
+<div class="table-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 600;">
+            <i class="fas fa-list"></i> Grants & Projects
+        </h5>
+        <a href="{% url 'create_grant' %}" class="btn btn-sm btn-primary" style="border-radius: 8px;">
+            <i class="fas fa-plus-circle"></i> Create Grant
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" style="font-size: 0.9rem;">
+            <thead>
+                <tr>
+                    <th>Grant</th>
+                    <th>Organization</th>
+                    <th>Accepted Projects</th>
+                    <th>Deadline</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in grant_rows %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: #1e293b;">{{ row.grant.title }}</div>
+                        <small style="color: #64748b;">{{ row.grant.role }}</small>
+                    </td>
+                    <td>{{ row.grant.company }}</td>
+                    <td>
+                        {% if row.accepted_count %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> {{ row.accepted_count }} project{{ row.accepted_count|pluralize }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-minus-circle"></i> None
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>{{ row.grant.deadline|date:"M d, Y" }}</small>
+                    </td>
+                    <td>
+                        <a href="{% url 'manage_grant_activities' row.grant.id %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
+                            <i class="fas fa-clipboard-list"></i> Configure Activities
+                        </a>
+                    </td>
+                </tr>
+                {% if row.accepted_count %}
+                <tr>
+                    <td colspan="5" style="background: #f8fafc;">
+                        <strong style="color: #1e293b;">Accepted Projects under this grant:</strong>
+                        <div class="row" style="margin-top: 0.5rem;">
+                            {% for app in row.accepted_projects %}
+                            <div class="col-md-6 col-lg-4" style="margin-bottom: 0.5rem;">
+                                <div style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e5e7eb; background: #ffffff;">
+                                    <div style="font-weight: 600; color: #1e293b;">
+                                        <i class="fas fa-user"></i> {{ app.name }}
+                                    </div>
+                                    <small style="color: #64748b;">{{ app.email }}</small><br>
+                                    <small style="color: #94a3b8;">Accepted on {{ app.updated_at|date:"M d, Y" }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 3rem;">
+                        <i class="fas fa-inbox" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <p style="color: #64748b; margin: 0;">No grants have been created yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+

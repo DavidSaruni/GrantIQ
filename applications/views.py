@@ -2,16 +2,28 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
-from .models import Application, ReviewAuditLog, QuarterlyReport
-from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.http import HttpResponseForbidden
-from .models import Application
+from django.conf import settings
+from django.urls import reverse
+from django.utils import timezone
+
+from .models import (
+    Application,
+    ReviewAuditLog,
+    QuarterlyReport,
+    ProjectActivity,
+    ActivityComment,
+)
 
 # Restrict to Admins or Grant Managers
 def is_admin_or_grant_manager(user):
     return user.is_authenticated and user.role in ['ADMIN', 'GRANT_MANAGER']
+
+
+def is_reviewer(user):
+    return user.is_authenticated and getattr(user, "role", "") == "REVIEWER"
 
 @login_required
 def my_grants(request):
@@ -47,6 +59,69 @@ def assign_reviewers(request):
     unassigned_count = unassigned_apps.count()
 
     if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "add_reviewer":
+            full_name = request.POST.get("name", "").strip()
+            email = request.POST.get("email", "").strip().lower()
+            password = request.POST.get("password", "")
+            confirm_password = request.POST.get("confirm_password", "")
+
+            if not full_name or not email or not password or not confirm_password:
+                messages.error(request, "All fields are required to add a reviewer.")
+                return redirect("assign_reviewers")
+
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("assign_reviewers")
+
+            if User.objects.filter(email=email).exists():
+                messages.error(request, "A user with this email already exists.")
+                return redirect("assign_reviewers")
+
+            # Split full name into first and last name
+            name_parts = full_name.split()
+            first_name = name_parts[0]
+            last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+            reviewer = User.objects.create_user(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                role=User.Role.REVIEWER,
+            )
+
+            # Send credentials email
+            try:
+                login_url = request.build_absolute_uri(reverse("login"))
+            except Exception:
+                login_url = ""
+
+            message = (
+                f"Hello {full_name},\n\n"
+                f"You have been added as a reviewer on GrantIQ.\n\n"
+                f"Login URL: {login_url}\n"
+                f"Email: {email}\n"
+                f"Password: {password}\n\n"
+                f"For security, please log in and change your password after your first login."
+            )
+
+            send_mail(
+                subject="Your GrantIQ Reviewer Account",
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                recipient_list=[email],
+                fail_silently=True,
+            )
+
+            messages.success(
+                request,
+                f"Reviewer {reviewer.get_full_name()} created successfully and login credentials emailed.",
+            )
+            return redirect("assign_reviewers")
+
+        # Default: assign existing reviewer to application
         app_id = request.POST.get("application_id")
         reviewer_id = request.POST.get("reviewer_id")
 
@@ -56,7 +131,10 @@ def assign_reviewers(request):
         application.reviewer = reviewer
         application.save()
 
-        messages.success(request, f"Reviewer {reviewer.get_full_name()} assigned successfully to {application.grant}.")
+        messages.success(
+            request,
+            f"Reviewer {reviewer.get_full_name()} assigned successfully to {application.grant}.",
+        )
         return redirect("assign_reviewers")
 
     return render(request, "applications/assign_reviewers.html", {
@@ -104,15 +182,20 @@ def application(request):
         return redirect('/grants/')
 
 @login_required
+@user_passes_test(is_reviewer)
 def reviewer_dashboard(request):
     # Optional filtering
     query = request.GET.get("q", "")
     status_filter = request.GET.get("status", "")
 
-    applications = Application.objects.all()  # Adjust based on how reviewer is assigned
+    applications = Application.objects.filter(reviewer=request.user)
+
+    total_assigned = applications.count()
+    pending_count = applications.filter(status="pending").count()
+    reviewed_count = applications.exclude(status="pending").count()
 
     if query:
-        applications = applications.filter(grant=query)
+        applications = applications.filter(grant__icontains=query)
     if status_filter:
         applications = applications.filter(status=status_filter)
 
@@ -120,7 +203,14 @@ def reviewer_dashboard(request):
     page_number = request.GET.get('page')
     review_applications = paginator.get_page(page_number)
 
-    return render(request, 'accounts/reviewer_dashboard.html', {'review_applications': review_applications})
+    context = {
+        "review_applications": review_applications,
+        "total_assigned": total_assigned,
+        "pending_count": pending_count,
+        "reviewed_count": reviewed_count,
+    }
+
+    return render(request, 'accounts/reviewer_dashboard.html', context)
 
 
 @login_required
@@ -129,7 +219,7 @@ def view_application(request, pk):
     return render(request, 'applications/view_application.html', {'application': application})
 
 @login_required
-@login_required
+@user_passes_test(is_reviewer)
 def review_application(request, pk):
     application = get_object_or_404(Application, pk=pk)
 
@@ -165,6 +255,31 @@ def review_application(request, pk):
         # )
 
         messages.success(request, f"Application #{application.id} has been {new_status}.")
+
+        # When an application is accepted, initialize project activities from the grant template
+        if new_status == "accepted":
+            from grants.models import GrantActivity, Grant
+
+            try:
+                grant = Grant.objects.get(id=application.grant_id)
+                templates = GrantActivity.objects.filter(grant=grant).order_by("order")
+                for template in templates:
+                    due_date = None
+                    if template.default_due_days:
+                        due_date = (timezone.now() + timezone.timedelta(days=template.default_due_days)).date()
+                    ProjectActivity.objects.get_or_create(
+                        application=application,
+                        grant_activity=template,
+                        defaults={
+                            "name": template.name,
+                            "description": template.description,
+                            "order": template.order,
+                            "due_date": due_date,
+                        },
+                    )
+            except Grant.DoesNotExist:
+                pass
+
         return redirect('reviewer_dashboard')
 
     return render(request, 'applications/review_application.html', {
@@ -172,15 +287,41 @@ def review_application(request, pk):
     })
 
 @login_required
+@user_passes_test(is_reviewer)
 def approve_application(request, pk):
     application = get_object_or_404(Application, pk=pk)
     application.status = 'accepted'
     application.save()
     messages.success(request, f"Application #{application.pk} approved successfully.")
+
+    # Initialize project activities when approved directly
+    from grants.models import GrantActivity, Grant
+
+    try:
+        grant = Grant.objects.get(id=application.grant_id)
+        templates = GrantActivity.objects.filter(grant=grant).order_by("order")
+        for template in templates:
+            due_date = None
+            if template.default_due_days:
+                due_date = (timezone.now() + timezone.timedelta(days=template.default_due_days)).date()
+            ProjectActivity.objects.get_or_create(
+                application=application,
+                grant_activity=template,
+                defaults={
+                    "name": template.name,
+                    "description": template.description,
+                    "order": template.order,
+                    "due_date": due_date,
+                },
+            )
+    except Grant.DoesNotExist:
+        pass
+
     return redirect('reviewer_dashboard')
 
 
 @login_required
+@user_passes_test(is_reviewer)
 def reject_application(request, pk):
     application = get_object_or_404(Application, pk=pk)
     application.status = 'rejected'
@@ -256,46 +397,29 @@ def upload_quarterly_report(request, app_id):
 
 @user_passes_test(lambda u: u.is_authenticated and u.role in ['ADMIN', 'GRANT_MANAGER'])
 def monitor_reports(request):
-    reports = QuarterlyReport.objects.select_related('application').order_by('-submitted_on')
-    
-    # Prepare quarterly progress data
-    accepted_applications = Application.objects.filter(status='accepted')
-    quarterly_progress = []
-    
+    # Monitoring & evaluation based on project activities
+    accepted_applications = Application.objects.filter(status="accepted")
+
+    projects = []
     for app in accepted_applications:
-        # Get all reports for this application
-        app_reports = QuarterlyReport.objects.filter(application=app)
-        
-        # Create a dictionary to track which quarters have been submitted
-        quarters_submitted = {
-            'Q1': app_reports.filter(quarter='Q1').exists(),
-            'Q2': app_reports.filter(quarter='Q2').exists(),
-            'Q3': app_reports.filter(quarter='Q3').exists(),
-            'Q4': app_reports.filter(quarter='Q4').exists(),
-        }
-        
-        quarterly_progress.append({
-            'grant_title': app.grant,
-            'grantee_name': app.name,
-            'quarters': quarters_submitted,
-            'total_submitted': sum(1 for q in quarters_submitted.values() if q),
-        })
-    
-    # Calculate statistics for the chart
-    quarter_stats = {
-        'Q1': sum(1 for item in quarterly_progress if item['quarters']['Q1']),
-        'Q2': sum(1 for item in quarterly_progress if item['quarters']['Q2']),
-        'Q3': sum(1 for item in quarterly_progress if item['quarters']['Q3']),
-        'Q4': sum(1 for item in quarterly_progress if item['quarters']['Q4']),
-    }
-    
+        activities = ProjectActivity.objects.filter(application=app)
+        total_activities = activities.count()
+        completed_activities = activities.filter(status="approved").count()
+        submitted_activities = activities.filter(status="submitted").count()
+
+        projects.append(
+            {
+                "application": app,
+                "total_activities": total_activities,
+                "completed_activities": completed_activities,
+                "submitted_activities": submitted_activities,
+            }
+        )
+
     context = {
-        'reports': reports,
-        'quarterly_progress': quarterly_progress,
-        'quarter_stats': quarter_stats,
-        'total_grantees': len(quarterly_progress),
+        "projects": projects,
     }
-    
-    return render(request, 'applications/monitor_reports.html', context)
+
+    return render(request, "applications/monitor_reports.html", context)
 
 

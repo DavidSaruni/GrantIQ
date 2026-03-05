@@ -59,6 +59,7 @@
             {% if unassigned_apps %}
             <form method="POST">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="assign_reviewer">
                 
                 <div class="mb-4">
                     <label for="application_id" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.75rem;">
@@ -109,6 +110,55 @@
                 </p>
             </div>
             {% endif %}
+        </div>
+        
+        <!-- Add New Reviewer Card -->
+        <div class="content-card" style="margin-top: 1.5rem;">
+            <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
+                <i class="fas fa-user-plus"></i> Add New Reviewer
+            </h5>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_reviewer">
+
+                <div class="mb-3">
+                    <label for="name" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.5rem;">
+                        <i class="fas fa-id-card"></i> Full Name
+                    </label>
+                    <input type="text" name="name" id="name" class="form-control" placeholder="e.g. Jane Doe" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.5rem;">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="reviewer@example.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.5rem;">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label" style="font-weight: 600; color: #475569; margin-bottom: 0.5rem;">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                    <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Credentials will be emailed to the reviewer.
+                    </small>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary btn-lg" style="border-radius: 8px; padding: 0.75rem; font-weight: 600;">
+                        <i class="fas fa-user-plus"></i> Create Reviewer
+                    </button>
+                </div>
+            </form>
         </div>
         
         <!-- Available Reviewers Card -->
