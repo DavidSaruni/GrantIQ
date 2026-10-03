@@ -1,0 +1,92 @@
+{% extends 'user_base.html' %}
+{% load static %}
+
+{% block title %}Application Discussion{% endblock %}
+{% block page_title %}Application Discussion{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'partials/_alerts.html' %}
+
+<div class="status-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap: 0.75rem;">
+        <div>
+            <h3 style="margin: 0 0 0.35rem; font-weight: 700; font-size: 1.15rem;">
+                <i class="fas fa-file-alt"></i> {{ application.grant }}
+            </h3>
+            <p style="margin: 0; opacity: 0.9;">Comments and updates from your reviewer</p>
+        </div>
+        <div>
+            {% if application.status == 'pending' %}
+                <span class="badge" style="background: #f59e0b; padding: 0.5rem 0.9rem;">Pending</span>
+            {% elif application.status == 'accepted' %}
+                <span class="badge" style="background: #10b981; padding: 0.5rem 0.9rem;">Accepted</span>
+            {% elif application.status == 'rejected' %}
+                <span class="badge" style="background: #ef4444; padding: 0.5rem 0.9rem;">Rejected</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="content-card">
+            <h4 class="section-title">
+                <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
+                Your proposal
+            </h4>
+            {% include 'partials/_proposal_viewer.html' %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="content-card">
+            <h4 class="section-title">
+                <i class="fas fa-comments" style="color: #6366f1;"></i>
+                Discussion
+                <span class="badge bg-light text-dark">{{ comments|length }}</span>
+            </h4>
+            {% include 'partials/_application_discussion.html' with can_reply=can_reply %}
+        </div>
+    </div>
+</div>
+
+{% if application.review_comments %}
+<div class="content-card" style="border-left: 4px solid {% if application.status == 'accepted' %}#10b981{% else %}#6366f1{% endif %};">
+    <h4 class="section-title">
+        <i class="fas fa-gavel"></i>
+        Reviewer remarks
+    </h4>
+    <p style="color: #1e293b; margin: 0;">{{ application.review_comments|linebreaksbr }}</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dashboard' %}" class="btn btn-outline-secondary" style="border-radius: 8px;">
+    <i class="fas fa-arrow-left"></i> Back to My Applications
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pdf.min.js' %}"></script>
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
+{% endblock %}

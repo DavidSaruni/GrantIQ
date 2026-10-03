@@ -79,12 +79,16 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if activity.submission_file %}
-                            <a href="{{ activity.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-file-alt"></i> View
-                            </a>
+                        {% if activity.needs_document %}
+                            {% if activity.submission_file %}
+                                <a href="{{ activity.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-file-alt"></i> View
+                                </a>
+                            {% else %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-upload"></i> Upload required</span>
+                            {% endif %}
                         {% else %}
-                            <small class="text-muted">No file</small>
+                            <small class="text-muted">Not required</small>
                         {% endif %}
                     </td>
                     <td>

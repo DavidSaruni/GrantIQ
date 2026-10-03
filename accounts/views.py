@@ -14,9 +14,6 @@ def login(request):
 
         if user is not None:
             auth.login(request, user)
-            messages.success(request, "You are now logged in!")
-
-            # ✅ Redirect based on role
             if user.is_superuser or user.is_staff or getattr(user, 'role', '').upper() == 'ADMIN':
                 return redirect('admin_dashboard')
             elif getattr(user, 'role', '').upper() == 'REVIEWER':
@@ -28,22 +25,6 @@ def login(request):
             return redirect('login')
     else:
         return render(request, 'accounts/login.html')
-
-    if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-
-        user = auth.authenticate(email=email,password=password)
-
-        if user is not None: # Check if the user is found in db
-            auth.login(request,user)
-            messages.success(request,"You are now logged in!")
-            return redirect('dashboard')
-        else:
-            messages.error(request, "Invalid credentials")
-            return redirect('login')
-    else:
-        return render(request,'accounts/login.html')
 
 def register(request):
     if request.method == 'POST':
@@ -75,14 +56,18 @@ def register(request):
         return render(request,'accounts/register.html')
         
 def logout(request):
-    if request.method == "POST":
-        auth.logout(request)
-        messages.success(request,"You are now logged out")
-        return redirect('index')
+    auth.logout(request)
+    return redirect("index")
 
 @login_required()
 def dashboard(request):
-    user_applications = Application.objects.order_by('-contact_date').filter(user_id=request.user.id)
+    from django.db.models import Count
+
+    user_applications = (
+        Application.objects.order_by("-contact_date")
+        .filter(user_id=request.user.id)
+        .annotate(discussion_count=Count("discussion_comments"))
+    )
     
     # Calculate stats
     pending_count = user_applications.filter(status='pending').count()
@@ -179,3 +164,56 @@ def promote_reviewer(request):
         "total_reviewers": total_reviewers,
         "total_promotable": total_promotable,
     })
+
+
+@user_passes_test(is_admin)
+def reviewer_applications(request):
+    from django.utils import timezone
+    from django.utils.crypto import get_random_string
+    from accounts.models import ReviewerApplication
+
+    if request.method == "POST":
+        app = get_object_or_404(ReviewerApplication, pk=request.POST.get("application_id"))
+        action = request.POST.get("action")
+        if action == "approve":
+            user = User.objects.filter(email__iexact=app.email).first()
+            if user:
+                user.role = User.Role.REVIEWER
+                if not user.first_name:
+                    user.first_name = app.first_name
+                if not user.last_name:
+                    user.last_name = app.last_name
+                user.save()
+            else:
+                password = get_random_string(12)
+                user = User.objects.create_user(
+                    email=app.email,
+                    password=password,
+                    first_name=app.first_name,
+                    last_name=app.last_name,
+                    role=User.Role.REVIEWER,
+                )
+                messages.info(
+                    request,
+                    f"Created reviewer account for {user.email}. Temporary password: {password}",
+                )
+            app.status = ReviewerApplication.Status.APPROVED
+            app.reviewed_at = timezone.now()
+            app.save()
+            messages.success(request, f"{app.full_name} has been approved as a reviewer.")
+        elif action == "reject":
+            app.status = ReviewerApplication.Status.REJECTED
+            app.reviewed_at = timezone.now()
+            app.save()
+            messages.info(request, f"{app.full_name}'s application was rejected.")
+        return redirect("reviewer_applications")
+
+    applications = ReviewerApplication.objects.all()
+    return render(
+        request,
+        "accounts/reviewer_applications.html",
+        {
+            "applications": applications,
+            "pending_count": applications.filter(status="pending").count(),
+        },
+    )

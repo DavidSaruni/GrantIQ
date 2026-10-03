@@ -16,7 +16,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3><i class="fas fa-hand-holding-usd"></i> GrantIQ</h3>
-                <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.8;">
+                <p style="font-size: 0.75rem; margin-top: 0.5rem; opacity: 0.8;">
                     {% if user.role == 'REVIEWER' %}
                         Reviewer Dashboard
                     {% else %}
@@ -29,6 +29,10 @@
                     <a href="{% url 'reviewer_dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'reviewer_dashboard' %}active{% endif %}">
                         <i class="fas fa-th-large"></i>
                         <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'application_list' %}" class="menu-item {% if request.resolver_match.url_name == 'application_list' or request.resolver_match.url_name == 'view_application' or request.resolver_match.url_name == 'review_application' %}active{% endif %}">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Applications</span>
                     </a>
                     <a href="{% url 'grants' %}" class="menu-item {% if request.resolver_match.url_name == 'grants' %}active{% endif %}">
                         <i class="fas fa-list"></i>
@@ -58,6 +62,10 @@
                     <a href="{% url 'promote_reviewer' %}" class="menu-item {% if request.resolver_match.url_name == 'promote_reviewer' %}active{% endif %}">
                         <i class="fas fa-user-shield"></i>
                         <span>Promote Users</span>
+                    </a>
+                    <a href="{% url 'reviewer_applications' %}" class="menu-item {% if request.resolver_match.url_name == 'reviewer_applications' %}active{% endif %}">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Reviewer Applications</span>
                     </a>
                     <a href="{% url 'monitor_reports' %}" class="menu-item {% if request.resolver_match.url_name == 'monitor_reports' %}active{% endif %}">
                         <i class="fas fa-chart-line"></i>

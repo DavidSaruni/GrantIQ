@@ -1,76 +1,89 @@
-{% extends 'base.html' %}
-{% block title %} About Us {% endblock %}
+{% extends 'landing_base.html' %}
+
+{% block title %}About Us{% endblock %}
+
 {% block content %}
- 
-
-<div class="page-heading about-heading header-text" style="background-image: url(https://images.unsplash.com/photo-1553013746-fd5454da7078?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1050&q=80);">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="text-content">
-            <h4>about us</h4>
-            <h2>our company</h2>
-          </div>
-        </div>
-      </div>
+<div class="page-hero">
+    <div class="page-hero-content">
+        <span class="page-hero-badge">About GrantIQ</span>
+        <h1>Empowering Research, Driving Measurable Impact</h1>
+        <p>We are redefining how institutions manage, track, and optimize research and funding processes across East Africa and beyond.</p>
     </div>
-  </div>
+</div>
 
-
-  <div class="best-features about-features">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="section-heading">
-            <h2>Get to know us a bit more</h2>
-          </div>
+<div class="stats-section">
+    <div class="about-stats-grid">
+        <div class="stat-item">
+            <h3>100%</h3>
+            <p>Lifecycle Transparency</p>
         </div>
-        <div class="col-md-6">
-          <div class="right-image">
-            <img src="https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" alt="">
-          </div>
+        <div class="stat-item">
+            <h3>$10M+</h3>
+            <p>Managed Funding</p>
         </div>
-        <div class="col-md-6">
-          <div class="left-content">
-            <h4>What do we do?</h4>
-            <p>At GrantIQ, we are redefining how institutions manage, track, and optimize research and funding processes. As a leading innovator in grant lifecycle management, we empower universities, research bodies, and development organizations to streamline everything from grant posting to project closure—through a secure, scalable, and intuitive digital platform.
-
-              Our system was born out of the real needs observed within academic and research institutions—specifically the lack of transparency, traceability, and automation in grant workflows. GrantIQ bridges that gap with intelligent tracking, financial auditing, compliance monitoring, and progress reporting—all under one unified interface. <br><br>
-              
-              Our mission is to make grant administration smarter, faster, and more impact-driven. Whether you’re an applicant, reviewer, grant manager, or auditor—GrantIQ ensures clarity, efficiency, and accountability at every stage.</p>
-            <ul class="social-icons">
-              <li><a href="#"><i class="fa fa-facebook"></i></a></li>
-              <li><a href="#"><i class="fa fa-twitter"></i></a></li>
-              <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
-            </ul>
-          </div>
+        <div class="stat-item">
+            <h3>50+</h3>
+            <p>Partner Institutions</p>
         </div>
-      </div>
+        <div class="stat-item">
+            <h3>1,000+</h3>
+            <p>Active Researchers</p>
+        </div>
     </div>
-  </div>
+</div>
 
-  
-  <div class="team-members">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12 mt-3">
-
-          <h5>What we believe in</h5>
-
-          <p>We believe that innovation should drive accessibility and integrity. GrantIQ stands for transparency, collaboration, and measurable impact. We’re passionate about building systems that not only meet administrative needs but also uplift researchers and institutions to achieve more with their funding.
-
-            Our work is guided by three pillars:
-            <ul>
-              <li><b>Equity in Access</b> – Ensuring fair opportunities for applicants from all disciplines.</li>
-              <li><b>Data-Driven Decision Making</b> – Offering insights that power evidence-based funding.</li>
-              <li><b>Sustainable Innovation</b> – Supporting systems that scale as institutions evolve.</li>
-            </ul>
-            
-            GrantIQ is more than a system—it’s your trusted partner in funding excellence.</p>
+<section class="landing-section">
+    <div class="story-grid">
+        <div class="story-content">
+            <h2>Pioneering the Future of Grant Lifecycle Management</h2>
+            <p>At GrantIQ, we empower universities, research bodies, and development organizations to streamline everything from grant posting to project closure—through a secure, scalable, and intuitive digital platform.</p>
+            <p>We believe innovation should drive accessibility and integrity. GrantIQ stands for transparency, collaboration, and measurable impact, building systems that uplift researchers and institutions to achieve more with their funding.</p>
         </div>
-      </div>
+        <div class="story-image">
+            <img src="https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?auto=format&fit=crop&w=800&q=80" alt="GrantIQ team and platform mission">
+        </div>
     </div>
-  </div>
+</section>
 
+<section class="landing-section pillars-section">
+    <div class="pillars-header">
+        <h2>Our Guiding Pillars</h2>
+        <p>Every feature and solution built into GrantIQ is driven by our commitment to these three foundational principles.</p>
+    </div>
+    <div class="pillars-grid">
+        <div class="pillar-card">
+            <div class="pillar-icon"><i data-lucide="scale" size="24"></i></div>
+            <h3>Equity in Access</h3>
+            <p>Ensuring fair opportunities for applicants from all disciplines, institutions, and backgrounds through standardized digital evaluation processes.</p>
+        </div>
+        <div class="pillar-card">
+            <div class="pillar-icon"><i data-lucide="shield" size="24"></i></div>
+            <h3>Transparency &amp; Integrity</h3>
+            <p>Providing total accountability and clear audit trails from initial grant posting through monitoring, evaluation, and final project closure.</p>
+        </div>
+        <div class="pillar-card">
+            <div class="pillar-icon"><i data-lucide="bar-chart-3" size="24"></i></div>
+            <h3>Measurable Impact</h3>
+            <p>Empowering funders and institutions with data-driven insights to maximize project outcomes and demonstrate real-world impact.</p>
+        </div>
+    </div>
+</section>
 
+<section class="landing-section">
+    <div class="cta-card">
+        <h2>Ready to Transform Your Grant Operations?</h2>
+        <p>Join leading institutions and researchers leveraging GrantIQ for secure, transparent, and streamlined grant management.</p>
+        {% if user.is_authenticated %}
+            {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+                <a href="{% url 'admin_dashboard' %}" class="btn-cta">Go to Dashboard</a>
+            {% elif user.role == 'REVIEWER' %}
+                <a href="{% url 'reviewer_dashboard' %}" class="btn-cta">Go to Dashboard</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}" class="btn-cta">Go to Dashboard</a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'register' %}" class="btn-cta">Get Started Today</a>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

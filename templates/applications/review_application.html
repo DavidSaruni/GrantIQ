@@ -1,20 +1,188 @@
-{% extends 'base.html' %}
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Review Application{% endblock %}
+{% block page_title %}Review Application{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .info-item {
+        background: #f8fafc;
+        padding: 0.75rem 0.9rem;
+        border-radius: 8px;
+        border-left: 4px solid #6366f1;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <h2>Review Application #{{ application.id }}</h2>
-  <p><strong>Grant:</strong> {{ application.job }}</p>
-  <p><strong>Applicant:</strong> {{ application.name }}</p>
-  <p><strong>Status:</strong> {{ application.status }}</p>
+{% include 'partials/_alerts.html' %}
 
-  <form method="POST">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="review_comments" class="form-label">Review Comments</label>
-      <textarea name="review_comments" class="form-control" rows="4" required></textarea>
+<div class="status-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap: 0.75rem;">
+        <div>
+            <h3 style="margin: 0 0 0.35rem; font-weight: 700; font-size: 1.15rem;">
+                <i class="fas fa-file-alt"></i> {{ application.grant }}
+            </h3>
+            <p style="margin: 0; opacity: 0.9;">Application #{{ application.id }} by {{ application.name }}</p>
+        </div>
+        <div>
+            {% if application.status == 'pending' %}
+                <span class="badge" style="background: #f59e0b; padding: 0.5rem 0.9rem;">
+                    <i class="fas fa-clock"></i> Pending Review
+                </span>
+            {% elif application.status == 'accepted' %}
+                <span class="badge" style="background: #10b981; padding: 0.5rem 0.9rem;">
+                    <i class="fas fa-check-circle"></i> Accepted
+                </span>
+            {% elif application.status == 'rejected' %}
+                <span class="badge" style="background: #ef4444; padding: 0.5rem 0.9rem;">
+                    <i class="fas fa-times-circle"></i> Rejected
+                </span>
+            {% endif %}
+        </div>
     </div>
-
-    <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
-    <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
-  </form>
 </div>
+
+<div class="content-card">
+    <h4 class="section-title">
+        <i class="fas fa-info-circle" style="color: #6366f1;"></i>
+        Applicant Information
+    </h4>
+    <div class="info-grid">
+        <div class="info-item">
+            <div class="info-label"><i class="fas fa-user"></i> Full Name</div>
+            <div class="info-value">{{ application.name }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label"><i class="fas fa-envelope"></i> Email</div>
+            <div class="info-value">{{ application.email }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label"><i class="fas fa-phone"></i> Phone</div>
+            <div class="info-value">{{ application.phone|default:"Not provided" }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label"><i class="fas fa-calendar-plus"></i> Submitted</div>
+            <div class="info-value">{{ application.created_at|date:"M d, Y" }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="content-card">
+            <h4 class="section-title">
+                <i class="fas fa-file-pdf" style="color: #ef4444;"></i>
+                Proposal document
+            </h4>
+            <p style="color: #64748b; margin-bottom: 0.85rem;">
+                Read the proposal here, then comment on the right. The applicant is emailed when you send a comment.
+            </p>
+            {% include 'partials/_proposal_viewer.html' %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="content-card">
+            <h4 class="section-title">
+                <i class="fas fa-comments" style="color: #6366f1;"></i>
+                Discussion
+                <span class="badge bg-light text-dark">{{ comments|length }}</span>
+            </h4>
+            {% include 'partials/_application_discussion.html' with can_reply=can_reply %}
+        </div>
+    </div>
+</div>
+
+{% if application.status == 'pending' %}
+<div class="content-card">
+    <h4 class="section-title">
+        <i class="fas fa-gavel" style="color: #6366f1;"></i>
+        Final remarks and decision
+    </h4>
+    <p style="color: #64748b;">
+        After the discussion, record your remarks and approve or decline this application.
+        The applicant will be emailed the decision.
+    </p>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="review_comments" class="form-label">Final remarks</label>
+            <textarea name="review_comments" id="review_comments" class="form-control" rows="5" required
+                      placeholder="Summarize your assessment and the reason for this decision.">{{ application.review_comments|default:'' }}</textarea>
+        </div>
+        <div class="d-flex flex-wrap" style="gap: 0.65rem;">
+            <button type="submit" name="action" value="approve" class="btn btn-success" style="border-radius: 8px;"
+                    onclick="return confirm('Approve this application?');">
+                <i class="fas fa-check"></i> Approve
+            </button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger" style="border-radius: 8px;"
+                    onclick="return confirm('Decline this application?');">
+                <i class="fas fa-times"></i> Decline
+            </button>
+            <a href="{% if user.role == 'REVIEWER' %}{% url 'reviewer_dashboard' %}{% else %}{% url 'application_list' %}{% endif %}"
+               class="btn btn-outline-secondary" style="border-radius: 8px;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="content-card" style="border-left: 4px solid {% if application.status == 'accepted' %}#10b981{% else %}#ef4444{% endif %};">
+    <h4 class="section-title">
+        <i class="fas fa-gavel"></i>
+        Decision recorded
+    </h4>
+    {% if application.review_comments %}
+        <p style="color: #1e293b; margin-bottom: 0.75rem;">{{ application.review_comments|linebreaksbr }}</p>
+    {% endif %}
+    <a href="{% if user.role == 'REVIEWER' %}{% url 'reviewer_dashboard' %}{% else %}{% url 'application_list' %}{% endif %}"
+       class="btn btn-outline-secondary" style="border-radius: 8px;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pdf.min.js' %}"></script>
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
 {% endblock %}

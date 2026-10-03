@@ -153,6 +153,9 @@
             
             <!-- Action Buttons -->
             <div class="grant-actions">
+                <a href="{% url 'project_activities' grant.id %}" class="btn btn-primary" style="border-radius: 8px;">
+                    <i class="fas fa-tasks"></i> Project Activities
+                </a>
                 <a href="{% url 'upload_quarterly_report' grant.id %}" class="btn btn-success" style="border-radius: 8px;">
                     <i class="fas fa-upload"></i> Upload Quarterly Report
                 </a>

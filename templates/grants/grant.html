@@ -1,99 +1,98 @@
-{% extends 'base.html' %}
-{% block title %} {{job.title}} {% endblock %}
-{% load humanize %}
+{% extends 'landing_base.html' %}
 {% load static %}
+{% load humanize %}
+
+{% block title %}{{ grant.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/fontawesome.css' %}">
+<link rel="stylesheet" href="{% static 'css/grants.css' %}">
+{% endblock %}
 
 {% block content %}
-    <div class="page-heading about-heading header-text" style="background-image: url(https://images.unsplash.com/photo-1516201580490-33550d32de5c?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1050&q=80);">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="text-content">
-            <h2>{{grant.role}}</h2>
-          </div>
+<div class="page-hero grant-detail-hero">
+    <div class="page-hero-content">
+        <span class="page-hero-badge">Grants and Calls</span>
+        <h1>{{ grant.title }}</h1>
+        <div class="grant-detail-meta">
+            <span>{{ grant.grant_date|date:"F j, Y" }}</span>
+            {% if grant.company %}<span>{{ grant.company }}</span>{% endif %}
+            {% if grant.location %}<span>{{ grant.location }}</span>{% endif %}
         </div>
-      </div>
     </div>
-  </div>
-  
-  <!-- Alerts -->
-  <br>
-  {% include 'partials/_alerts.html'%}
+</div>
 
-  <div class="products">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-9 col-sm-8">
-            <p class="lead">
-                 <i class="fa fa-map-marker"></i> {{job.location}} &nbsp;&nbsp;
-                 <!-- <i class="fa fa-calendar"></i> {{job.job_date | timesince}} &nbsp;&nbsp;
-                 <br> -->
-                 <i class="fa fa-file"></i> {{job.contract}}
-            </p>
-            <br>
-            
-            <div class="form-group">
-              <h3>Grant Description:</h3>
+<section class="landing-section">
+    <a href="{% url 'grants' %}" class="grant-back">
+        <i data-lucide="arrow-left" size="16"></i> Back to all grants
+    </a>
+
+    <div class="grant-detail-layout">
+        <div class="grant-detail-card">
+            {% if grant.main_image %}
+                <img src="{{ grant.main_image.url }}" alt="{{ grant.title }}" class="grant-detail-image">
+            {% endif %}
+
+            <div class="grant-body">
+                {{ grant.description|safe }}
             </div>
 
-            <p>{{grant.description}}</p>
-            
+            {% if documents %}
+                <p class="grant-download-prompt">For more information please download document below:</p>
+                {% for doc in documents %}
+                    <div class="grant-document-viewer">
+                        <div class="grant-document-toolbar">
+                            <span class="grant-document-title">
+                                <i class="fa fa-file{% if doc.is_pdf %}-pdf-o{% elif doc.is_image %}-image-o{% endif %}"></i>
+                                {{ doc.title|default:doc.filename }}
+                            </span>
+                            <a class="grant-download-btn" href="{{ doc.file.url }}" download>
+                                <i class="fa fa-download"></i> Download
+                            </a>
+                        </div>
+                        {% if doc.is_pdf %}
+                            {% url 'grant_document_preview' doc.id as doc_preview_url %}
+                            {% include 'partials/_pdf_viewer_frame.html' with pdf_url=doc_preview_url %}
+                        {% elif doc.is_image %}
+                            <div class="grant-document-image-wrap">
+                                <img src="{{ doc.file.url }}" alt="{{ doc.title }}">
+                            </div>
+                        {% else %}
+                            <div class="grant-document-fallback">
+                                Preview is not available for this file type.
+                                <a href="{{ doc.file.url }}" download>Download {{ doc.filename }}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
-        
-       
-        <div class="col-md-3 col-sm-4">
-          <div class="contact-form">
-            <div class="form-group">
 
-                <a 
-                class="filled-button btn-block text-center"
-                href="{% url 'applygrant_with_grant_id' grant_id=grant.id %}" role="button">Apply Now</a>
+        <aside class="grant-sidebar-wrap">
+            <a class="grant-apply-btn" href="{% url 'applygrant_with_grant_id' grant_id=grant.id %}">
+                Apply Now
+            </a>
+            <div class="grant-summary-card">
+                <h3>Call summary</h3>
+                {% if grant.deadline %}
+                    <p><strong>Deadline:</strong> {{ grant.deadline|date:"F d, Y" }}</p>
+                {% endif %}
+                {% if grant.company %}
+                    <p><strong>Funder:</strong> {{ grant.company }}</p>
+                {% endif %}
+                {% if grant.location %}
+                    <p><strong>Location:</strong> {{ grant.location }}</p>
+                {% endif %}
+                {% if grant.salary %}
+                    <p><strong>Funds:</strong> KES {{ grant.salary|intcomma }}</p>
+                {% endif %}
             </div>
-          </div>
-
-          <div>
-            <img src="{{ grant.main_image.url }}" alt="" class="img-fluid wc-image">
-          </div>
-
-          <br>
-          <br>
-        </div>
-      </div>
+        </aside>
     </div>
-  </div>
+</section>
+{% endblock %}
 
-  <div class="section">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-9">
-          <div class="section-heading">
-            <h2>About {{grant.company}}</h2>
-          </div>
-
-          <p>{{grant.about}}</p>
-          <br>
-          <p></p>
-        </div>
-
-        <div class="col-md-3">
-          <div class="section-heading">
-            <h2>Grant Summary</h2>
-          </div>
-          
-          <div class="summary left-content">
-            <strong title="Salary">Funds per project: ${{grant.salary | intcomma }}</strong>
-            <br>
-            <strong title="Vacancy">No of Projects: {{grant.vacancy}}</strong>
-            <br>
-            <strong title="Experience">Duration: {{grant.experience}} Year(s)</strong>
-            <br>
-            <strong title="Application Deadline">Application Deadline: {{grant.deadline | date:"F d Y" }}</strong>
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  
+{% block extra_js %}
+<script src="{% static 'js/pdf.min.js' %}"></script>
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
 {% endblock %}

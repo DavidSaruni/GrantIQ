@@ -1,4 +1,4 @@
-{% extends user.role == 'ADMIN' or user.role == 'GRANT_MANAGER'|yesno:'admin_base.html,user_base.html' %}
+{% extends base_template %}
 
 {% block title %}Activity Detail{% endblock %}
 {% block page_title %}Activity - {{ activity.name }}{% endblock %}
@@ -40,6 +40,15 @@
             </div>
 
             <div class="mb-3">
+                <strong>Document submission:</strong>
+                {% if activity.needs_document %}
+                    <span class="badge bg-info text-dark"><i class="fas fa-file-upload"></i> Required</span>
+                {% else %}
+                    <span class="badge bg-light text-dark">Not required</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
                 <strong>Latest Submission:</strong><br>
                 {% if activity.submission_file %}
                     <a href="{{ activity.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
@@ -49,11 +58,11 @@
                         <small class="text-muted d-block mt-1">Submitted on {{ activity.submitted_at|date:"M d, Y H:i" }}</small>
                     {% endif %}
                 {% else %}
-                    <small class="text-muted">No submission yet.</small>
+                    <small class="text-muted">{% if activity.needs_document %}No submission yet.{% else %}No document is required for this activity.{% endif %}</small>
                 {% endif %}
             </div>
 
-            {% if user.email == activity.application.email %}
+            {% if is_grantee and activity.needs_document %}
             <!-- Grantee upload form -->
             <hr>
             <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">
@@ -64,7 +73,7 @@
                 <input type="hidden" name="action" value="submit">
                 <div class="mb-3">
                     <label class="form-label">
-                        Upload file (PDF, DOCX, XLS/XLSX)
+                        Upload file (PDF, DOCX, XLS/XLSX) *
                     </label>
                     <input type="file" name="submission_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx" required>
                 </div>
@@ -74,9 +83,14 @@
                     </button>
                 </div>
             </form>
+            {% elif is_grantee %}
+            <hr>
+            <p class="text-muted mb-0">
+                <i class="fas fa-info-circle"></i> This activity does not require a document upload.
+            </p>
             {% endif %}
 
-            {% if user.role == 'ADMIN' or user.role == 'GRANT_MANAGER' %}
+            {% if is_manager %}
             <!-- Grant manager approval controls -->
             <hr>
             <h5 style="margin-bottom: 1rem; color: #1e293b; font-weight: 600;">

@@ -1,206 +1,211 @@
 {% extends 'admin_base.html' %}
+{% load static %}
 
-{% block title %}Create Grant{% endblock %}
-{% block page_title %}Create New Grant{% endblock %}
+{% block title %}{% if grant %}Edit Grant{% else %}Create Grant{% endif %}{% endblock %}
+{% block page_title %}{% if grant %}Edit Grant{% else %}Create New Grant{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<style>
+    #quill-editor {
+        min-height: 320px;
+        background: #fff;
+        border-radius: 0 0 12px 12px;
+    }
+    .ql-toolbar.ql-snow {
+        border-radius: 12px 12px 0 0;
+        background: #fff;
+    }
+    .ql-container.ql-snow {
+        border-radius: 0 0 12px 12px;
+        font-size: 1rem;
+    }
+    .slug-preview {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.35rem;
+    }
+    .slug-preview code {
+        background: #e2e8f0;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        color: #334155;
+    }
+    .attachment-hint {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Alerts -->
 {% include 'partials/_alerts.html' %}
 
-<!-- Form Card -->
 <div class="content-card" style="max-width: 1000px; margin: 0 auto;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 style="margin: 0; color: #1e293b; font-weight: 600;">
-            <i class="fas fa-plus-circle" style="color: #6366f1;"></i> Grant Information
+            {% if grant %}
+                <i class="fas fa-edit" style="color: #6366f1;"></i> Edit Grant Information
+            {% else %}
+                <i class="fas fa-plus-circle" style="color: #6366f1;"></i> Grant Information
+            {% endif %}
         </h4>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        <a href="{% url 'manage_grants' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
+            <i class="fas fa-arrow-left"></i> Back to Manage Grants
         </a>
     </div>
 
-    <form action="{% url 'create_grant' %}" method="POST" enctype="multipart/form-data">
+    <form action="{% if grant %}{% url 'edit_grant' grant.id %}{% else %}{% url 'create_grant' %}{% endif %}" method="POST" enctype="multipart/form-data" id="create-grant-form">
         {% csrf_token %}
 
-        <!-- Basic Information Section -->
         <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
             <h5 style="color: #6366f1; font-weight: 600; margin-bottom: 1.5rem;">
-                <i class="fas fa-info-circle"></i> Basic Information
+                <i class="fas fa-heading"></i> Grant Title
             </h5>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="company" class="form-label">
-                        <i class="fas fa-building"></i> Funding Organization *
-                    </label>
-                    <input type="text" name="company" id="company" class="form-control" required autocomplete="off" placeholder="e.g., Gates Foundation">
+            <div class="mb-2">
+                <label for="title" class="form-label">Title *</label>
+                <input type="text" name="title" id="title" class="form-control" required maxlength="200"
+                       placeholder="e.g., Collaborative Network for Vaccine Research in West and East Africa"
+                       value="{{ grant.title|default:'' }}">
+                <p class="slug-preview mb-0">
+                    Page URL: <code id="slug-preview">{% if grant %}/grants/{{ grant.slug }}/{% else %}/grants/your-grant-title/{% endif %}</code>
+                </p>
+                {% if grant %}
+                <small class="attachment-hint">The public URL stays the same when you edit the title.</small>
+                {% endif %}
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label for="company" class="form-label">Funding organization</label>
+                    <input type="text" name="company" id="company" class="form-control"
+                           placeholder="e.g., National Research Fund"
+                           value="{{ grant.company|default:'' }}">
                 </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="title" class="form-label">
-                        <i class="fas fa-heading"></i> Grant Title *
-                    </label>
-                    <input type="text" name="title" id="title" class="form-control" required autocomplete="off" placeholder="e.g., Community Development Grant">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="role" class="form-label">
-                        <i class="fas fa-tag"></i> Grant Category *
-                    </label>
-                    <input type="text" name="role" id="role" class="form-control" required autocomplete="off" placeholder="e.g., Education, Health, Technology">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="location" class="form-label">
-                        <i class="fas fa-map-marker-alt"></i> Location *
-                    </label>
-                    <select name="location" id="location" class="form-select" required>
-                        <option value="" selected disabled>Select Location</option>
-                        <option value="Nairobi">Nairobi</option>
-                        <option value="Mombasa">Mombasa</option>
-                        <option value="Kisumu">Kisumu</option>
-                        <option value="Nakuru">Nakuru</option>
-                        <option value="Eldoret">Eldoret</option>
-                        <option value="Kakamega">Kakamega</option>
-                        <option value="Nyeri">Nyeri</option>
-                        <option value="Remote">Remote</option>
-                        <option value="Nationwide">Nationwide</option>
-                    </select>
+                <div class="col-md-6">
+                    <label for="deadline" class="form-label">Application deadline</label>
+                    <input type="datetime-local" name="deadline" id="deadline" class="form-control"
+                           {% if grant.deadline %}value="{{ grant.deadline|date:'Y-m-d' }}T{{ grant.deadline|date:'H:i' }}"{% endif %}>
                 </div>
             </div>
         </div>
 
-        <!-- Eligibility & Funding Section -->
         <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h5 style="color: #10b981; font-weight: 600; margin-bottom: 1.5rem;">
-                <i class="fas fa-check-circle"></i> Eligibility & Funding Details
+            <h5 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.75rem;">
+                <i class="fas fa-file-alt"></i> Grant detailed information *
             </h5>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="contract" class="form-label">
-                        <i class="fas fa-user-check"></i> Eligibility Type *
-                    </label>
-                    <select name="contract" id="contract" class="form-select" required>
-                        <option value="" selected disabled>Select Eligibility</option>
-                        <option value="Part Time">Part Time</option>
-                        <option value="Full Time">Full Time</option>
-                        <option value="Freelance">Freelancer</option>
-                        <option value="Organization">Organization</option>
-                        <option value="Individual">Individual</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="vacancy" class="form-label">
-                        <i class="fas fa-users"></i> No. of Projects to Support *
-                    </label>
-                    <input type="number" name="vacancy" id="vacancy" class="form-control" required autocomplete="off" placeholder="e.g., 10" min="1">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="experience" class="form-label">
-                        <i class="fas fa-calendar-alt"></i> Duration (Months) *
-                    </label>
-                    <input type="number" name="experience" id="experience" class="form-control" required autocomplete="off" placeholder="e.g., 12" min="1">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="salary" class="form-label">
-                        <i class="fas fa-dollar-sign"></i> Funds per Project (KES) *
-                    </label>
-                    <input type="number" name="salary" id="salary" class="form-control" required autocomplete="off" placeholder="e.g., 500000" min="0">
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label for="deadline" class="form-label">
-                        <i class="fas fa-clock"></i> Application Deadline *
-                    </label>
-                    <input type="datetime-local" name="deadline" id="deadline" class="form-control" required>
-                    <small class="text-muted">Select the date and time when applications will close</small>
-                </div>
-            </div>
+            <p class="attachment-hint mb-3">
+                Use headings, lists, links, and formatting so each call can describe its own eligibility,
+                requirements, and how to apply.
+            </p>
+            <div id="quill-editor"></div>
+            <textarea name="description" id="description" hidden></textarea>
         </div>
 
-        <!-- Description Section -->
-        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h5 style="color: #f59e0b; font-weight: 600; margin-bottom: 1.5rem;">
-                <i class="fas fa-file-alt"></i> Detailed Description
-            </h5>
-            
-            <div class="mb-3">
-                <label for="description" class="form-label">
-                    <i class="fas fa-align-left"></i> Grant Description *
-                </label>
-                <textarea name="description" id="description" rows="5" class="form-control" required placeholder="Provide a detailed description of the grant, including objectives, expected outcomes, and any specific requirements..."></textarea>
-                <small class="text-muted">Describe what the grant aims to achieve and who should apply</small>
-            </div>
-
-            <div class="mb-3">
-                <label for="about" class="form-label">
-                    <i class="fas fa-building"></i> About the Organization *
-                </label>
-                <textarea name="about" id="about" rows="4" class="form-control" required placeholder="Tell us about the funding organization, its mission, and previous grant programs..."></textarea>
-                <small class="text-muted">Provide background information about the funding organization</small>
-            </div>
-        </div>
-
-        <!-- Image Upload Section -->
         <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
             <h5 style="color: #8b5cf6; font-weight: 600; margin-bottom: 1.5rem;">
-                <i class="fas fa-image"></i> Grant Image
+                <i class="fas fa-image"></i> Grant image (optional)
             </h5>
-            
-            <div class="mb-3">
-                <label for="main_image" class="form-label">
-                    <i class="fas fa-upload"></i> Main Image *
-                </label>
-                <input type="file" name="main_image" id="main_image" class="form-control" required accept="image/*">
-                <small class="text-muted">Upload a representative image for this grant (JPG, PNG, max 5MB)</small>
+            {% if grant.main_image %}
+            <div class="mb-2">
+                <img src="{{ grant.main_image.url }}" alt="Current grant image" style="max-height: 120px; border-radius: 8px;">
             </div>
+            <small class="attachment-hint d-block mb-2">Current image. Upload a new file to replace it.</small>
+            {% endif %}
+            <input type="file" name="main_image" id="main_image" class="form-control" accept="image/*">
+            <small class="attachment-hint">JPG, PNG, GIF or WebP. Max 10MB.</small>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="d-flex justify-content-end gap-2" style="gap: 1rem;">
-            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary" style="border-radius: 8px; padding: 0.75rem 1.5rem;">
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h5 style="color: #0ea5e9; font-weight: 600; margin-bottom: 1.5rem;">
+                <i class="fas fa-paperclip"></i> Attach documents
+            </h5>
+            <input type="file" name="attachments" id="attachments" class="form-control" multiple
+                   accept=".pdf,image/*">
+            <small class="attachment-hint">
+                PDFs and images. These appear embedded on the grant page with a download option.
+            </small>
+            {% if grant %}
+            <ul class="mt-3 mb-0" style="color:#475569;">
+                {% for document in grant.documents.all %}
+                <li>{{ document.title }}</li>
+                {% empty %}
+                <li class="attachment-hint">No documents attached yet.</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <ul id="attachment-list" class="mt-3 mb-0" style="color:#475569;"></ul>
+        </div>
+
+        <div class="d-flex justify-content-end" style="gap: 1rem;">
+            <a href="{% url 'manage_grants' %}" class="btn btn-secondary" style="border-radius: 8px; padding: 0.75rem 1.5rem;">
                 <i class="fas fa-times"></i> Cancel
             </a>
             <button type="submit" class="btn btn-primary-modern">
-                <i class="fas fa-check"></i> Create Grant
+                {% if grant %}
+                    <i class="fas fa-save"></i> Save Changes
+                {% else %}
+                    <i class="fas fa-check"></i> Create Grant
+                {% endif %}
             </button>
         </div>
     </form>
 </div>
+{% endblock %}
 
-<!-- Help Card -->
-<div class="content-card" style="max-width: 1000px; margin: 2rem auto;">
-    <h5 style="color: #1e293b; font-weight: 600; margin-bottom: 1rem;">
-        <i class="fas fa-question-circle"></i> Need Help?
-    </h5>
-    <div class="row">
-        <div class="col-md-4">
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-                <h6 style="color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">
-                    <i class="fas fa-lightbulb"></i> Grant Title Tips
-                </h6>
-                <small style="color: #64748b;">Use clear, descriptive titles that indicate the grant's purpose and target audience</small>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-                <h6 style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem;">
-                    <i class="fas fa-dollar-sign"></i> Funding Amount
-                </h6>
-                <small style="color: #64748b;">Specify the exact amount available per project to help applicants plan accordingly</small>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px;">
-                <h6 style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
-                    <i class="fas fa-calendar"></i> Deadline Setting
-                </h6>
-                <small style="color: #64748b;">Allow sufficient time for applicants to prepare quality proposals (typically 2-4 weeks)</small>
-            </div>
-        </div>
-    </div>
-</div>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+(function () {
+    var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        placeholder: 'Describe the call: background, eligibility, how to apply, deadlines, and any special requirements…',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ indent: '-1' }, { indent: '+1' }],
+                ['blockquote', 'link'],
+                [{ align: [] }],
+                ['clean']
+            ]
+        }
+    });
+
+    function slugify(text) {
+        return text.toLowerCase()
+            .replace(/['’]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 80) || 'your-grant-title';
+    }
+
+    var titleInput = document.getElementById('title');
+    var slugPreview = document.getElementById('slug-preview');
+    var keepSlug = {{ grant|yesno:"true,false" }};
+    if (!keepSlug) {
+        titleInput.addEventListener('input', function () {
+            slugPreview.textContent = '/grants/' + slugify(titleInput.value) + '/';
+        });
+    }
+
+    {% if grant %}
+    quill.root.innerHTML = "{{ grant.description|escapejs }}";
+    {% endif %}
+
+    document.getElementById('attachments').addEventListener('change', function (event) {
+        var list = document.getElementById('attachment-list');
+        list.innerHTML = '';
+        Array.from(event.target.files).forEach(function (file) {
+            var item = document.createElement('li');
+            item.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+            list.appendChild(item);
+        });
+    });
+
+    document.getElementById('create-grant-form').addEventListener('submit', function () {
+        document.getElementById('description').value = quill.root.innerHTML;
+    });
+})();
+</script>
 {% endblock %}

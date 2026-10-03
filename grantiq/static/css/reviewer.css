@@ -1,0 +1,130 @@
+.reviewer-hero {
+    background-image: url(https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1400&q=80);
+}
+
+.reviewer-page {
+    background: #f7f8fa;
+}
+
+.reviewer-intro {
+    font-size: 1.15rem !important;
+    font-weight: 400 !important;
+    color: #444 !important;
+    margin-bottom: 2rem !important;
+}
+
+.reviewer-section,
+.reviewer-card {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    padding: 1.75rem 1.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.reviewer-section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.reviewer-section-head span {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #7532f1;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.reviewer-section-head h3,
+.reviewer-card h4,
+.reviewer-form-title {
+    color: #1a1a1a;
+    font-weight: 700;
+}
+
+.reviewer-form-title {
+    font-size: 1.6rem;
+    margin: 2rem 0 1rem;
+}
+
+.reviewer-section p,
+.reviewer-card p {
+    margin-bottom: 0.85rem !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    line-height: 1.7 !important;
+    color: #4a4a4a !important;
+}
+
+.reviewer-bullets {
+    list-style: disc !important;
+    padding-left: 1.3rem !important;
+    margin: 0 0 0.75rem !important;
+}
+
+.reviewer-bullets li {
+    margin-bottom: 0.45rem;
+    color: #4a4a4a;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.reviewer-form label {
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.reviewer-form small {
+    color: #777;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.reviewer-check {
+    display: flex !important;
+    gap: 0.6rem;
+    font-weight: 400 !important;
+    align-items: flex-start;
+    margin: 0.45rem 0;
+}
+
+.reviewer-check input {
+    margin-top: 0.3rem;
+}
+
+.ford-field {
+    border: 1px solid #ececec;
+    margin-bottom: 0.65rem;
+}
+
+.ford-toggle {
+    width: 100%;
+    text-align: left;
+    background: #f3f0ff;
+    border: 0;
+    padding: 0.75rem 1rem;
+    color: #4b2aad;
+    cursor: pointer;
+}
+
+.ford-group {
+    padding: 0.75rem 1rem 0.25rem;
+}
+
+.ford-group h5 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: #333;
+}
+
+.reviewer-submit {
+    margin-top: 1.25rem;
+}

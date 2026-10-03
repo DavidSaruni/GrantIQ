@@ -26,7 +26,10 @@ SECRET_KEY = 'ih)tbnc6#9e+$r*=fu&urnnv7m=b(lzl4%#b+0v#vg(517aqec'
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['grantiq.co.ke', 'www.grantiq.co.ke', '151.80.4.15']
+ALLOWED_HOSTS = ['grantiq.co.ke', 'www.grantiq.co.ke', '151.80.4.15', 'localhost', '127.0.0.1']
+
+# Allow same-origin PDF previews in the grant document viewer
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Application definition
 AUTH_USER_MODEL = 'accounts.User'
@@ -82,16 +85,25 @@ WSGI_APPLICATION = 'grantiq.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'vhxgfnkk_grantiq',
-        'USER': 'vhxgfnkk_captain',
-        'PASSWORD': 'Captain@01',
-        'PORT': '3306',
-        'HOST': 'localhost',
+# Use SQLite for local development. Set GRANTIQ_USE_MYSQL=1 to use MySQL.
+if os.environ.get('GRANTIQ_USE_MYSQL') == '1':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'vhxgfnkk_grantiq',
+            'USER': 'vhxgfnkk_captain',
+            'PASSWORD': 'Captain@01',
+            'PORT': '3306',
+            'HOST': 'localhost',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 
 # Password validation
@@ -162,3 +174,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sarunidavid11126@gmail.com'
 EMAIL_HOST_PASSWORD = 'memitikule'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

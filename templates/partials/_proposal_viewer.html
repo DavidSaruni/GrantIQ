@@ -1,0 +1,27 @@
+{% if application.resume %}
+<div class="proposal-viewer">
+    <div class="proposal-viewer-toolbar">
+        <span class="proposal-viewer-title">
+            <i class="fas fa-file{% if application.resume_is_pdf %}-pdf{% elif application.resume_is_image %}-image{% endif %}"></i>
+            {{ application.resume_filename }}
+        </span>
+        <a class="proposal-download-btn" href="{{ application.resume.url }}" download>
+            <i class="fas fa-download"></i> Download
+        </a>
+    </div>
+    {% if application.resume_is_pdf %}
+        {% url 'application_proposal_preview' application.id as proposal_preview_url %}
+        {% include 'partials/_pdf_viewer_frame.html' with pdf_url=proposal_preview_url %}
+    {% elif application.resume_is_image %}
+        <div class="proposal-image-wrap">
+            <img src="{{ application.resume.url }}" alt="Proposal document">
+        </div>
+    {% else %}
+        <div class="proposal-image-wrap">
+            <p style="color: #64748b; margin: 0;">Preview is not available for this file type. Download it to read the proposal.</p>
+        </div>
+    {% endif %}
+</div>
+{% else %}
+<p style="margin: 0; color: #64748b;">No proposal document was uploaded with this application.</p>
+{% endif %}

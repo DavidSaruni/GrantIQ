@@ -1,0 +1,36 @@
+<div class="discussion-thread mb-3">
+    {% for comment in comments %}
+    <div class="comment-bubble {% if comment.author_id == user.id %}mine{% endif %}">
+        <div style="font-weight: 600; color: #1e293b;">
+            <i class="fas fa-user-circle"></i>
+            {{ comment.author.get_full_name|default:comment.author.email }}
+            {% if comment.author.role == 'REVIEWER' %}
+                <span class="badge bg-primary" style="font-size: 0.65rem; margin-left: 0.25rem;">Reviewer</span>
+            {% elif comment.author_id == user.id or comment.author.email == application.email %}
+                <span class="badge bg-secondary" style="font-size: 0.65rem; margin-left: 0.25rem;">Applicant</span>
+            {% endif %}
+        </div>
+        <div style="color: #334155; margin-top: 0.35rem;">{{ comment.message|linebreaksbr }}</div>
+        <div class="comment-meta">
+            <i class="fas fa-clock"></i> {{ comment.created_at|date:"M d, Y H:i" }}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">No comments yet. Start the conversation about this proposal.</p>
+    {% endfor %}
+</div>
+
+{% if can_reply %}
+<form method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="comment">
+    <div class="mb-2">
+        <label for="message" class="form-label">Add a comment</label>
+        <textarea name="message" id="message" class="form-control" rows="4" required
+                  placeholder="Ask a question, request a clarification, or reply to the latest comment."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary-modern">
+        <i class="fas fa-paper-plane"></i> Send comment
+    </button>
+</form>
+{% endif %}

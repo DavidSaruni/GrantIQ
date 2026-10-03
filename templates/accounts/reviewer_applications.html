@@ -1,0 +1,64 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Reviewer Applications{% endblock %}
+{% block page_title %}Reviewer Applications{% endblock %}
+
+{% block content %}
+{% include 'partials/_alerts.html' %}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 style="margin: 0; font-weight: 600;">Become a Reviewer submissions</h4>
+        <span class="badge bg-warning text-dark">{{ pending_count }} pending</span>
+    </div>
+
+    {% if applications %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Institution</th>
+                        <th>Qualification</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                        <tr>
+                            <td>{{ app.full_name }}</td>
+                            <td>{{ app.email }}</td>
+                            <td>{{ app.institution }}</td>
+                            <td>{{ app.highest_qualification }}</td>
+                            <td>{{ app.submitted_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge {% if app.status == 'approved' %}bg-success{% elif app.status == 'rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ app.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if app.status == 'pending' %}
+                                    <form method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="application_id" value="{{ app.id }}">
+                                        <button class="btn btn-sm btn-success" name="action" value="approve">Approve</button>
+                                        <button class="btn btn-sm btn-outline-danger" name="action" value="reject">Reject</button>
+                                    </form>
+                                {% endif %}
+                                {% if app.cv %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ app.cv.url }}" target="_blank">CV</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">No reviewer applications yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

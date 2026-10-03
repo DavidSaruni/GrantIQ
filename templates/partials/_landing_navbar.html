@@ -1,0 +1,43 @@
+<header class="landing-header">
+    <nav class="nav-container">
+        <a href="{% url 'index' %}" class="logo">
+            <i data-lucide="layers" style="color: var(--accent);"></i>
+            Grant<span>IQ</span>
+        </a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu">
+            <i data-lucide="menu" size="24"></i>
+        </button>
+        <ul class="nav-links" id="nav-links">
+            <li>
+                <a href="{% url 'index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}>Home</a>
+            </li>
+            <li>
+                <a href="{% url 'index' %}#business-units">Services</a>
+            </li>
+            <li>
+                <a href="{% url 'grants' %}" {% if request.resolver_match.url_name == 'grants' or request.resolver_match.url_name == 'grant' or request.resolver_match.url_name == 'search' or request.resolver_match.url_name == 'applygrant_with_grant_id' %}class="active"{% endif %}>Grants</a>
+            </li>
+            <li>
+                <a href="{% url 'about' %}" {% if request.resolver_match.url_name == 'about' %}class="active"{% endif %}>About Us</a>
+            </li>
+            <li>
+                <a href="{% url 'become_reviewer' %}" {% if request.resolver_match.url_name == 'become_reviewer' %}class="active"{% endif %}>Become a Reviewer</a>
+            </li>
+            {% if user.is_authenticated %}
+                <li>
+                    {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
+                        <a href="{% url 'admin_dashboard' %}" class="btn-login"><i data-lucide="layout-dashboard" size="16"></i> Dashboard</a>
+                    {% elif user.role == 'REVIEWER' %}
+                        <a href="{% url 'reviewer_dashboard' %}" class="btn-login"><i data-lucide="layout-dashboard" size="16"></i> Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'dashboard' %}" class="btn-login"><i data-lucide="layout-dashboard" size="16"></i> Dashboard</a>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>
+                    <a href="{% url 'login' %}" class="btn-login"><i data-lucide="user" size="16"></i> Login</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>

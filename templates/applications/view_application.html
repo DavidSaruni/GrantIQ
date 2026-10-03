@@ -268,7 +268,7 @@
 
 <!-- Action Buttons -->
 <div class="d-flex gap-2" style="gap: 1rem;">
-    <a href="{% url 'application_list' %}" class="btn btn-secondary" style="border-radius: 8px; padding: 0.75rem 1.5rem;">
+    <a href="{% if user.role == 'REVIEWER' %}{% url 'reviewer_dashboard' %}{% else %}{% url 'application_list' %}{% endif %}" class="btn btn-secondary" style="border-radius: 8px; padding: 0.75rem 1.5rem;">
         <i class="fas fa-arrow-left"></i> Back to Applications
     </a>
     {% if application.status == 'pending' %}

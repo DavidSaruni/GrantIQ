@@ -10,6 +10,7 @@ urlpatterns=[
     path('route/', login_redirect_view, name='login_redirect'),
     path('admin/', views.admin_dashboard, name='admin_dashboard'),
     path('promote-reviewer/', views.promote_reviewer, name='promote_reviewer'),
+    path('reviewer-applications/', views.reviewer_applications, name='reviewer_applications'),
 
 
 ]

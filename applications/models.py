@@ -31,6 +31,40 @@ class Application(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def resume_filename(self):
+        if not self.resume:
+            return ""
+        return self.resume.name.rsplit("/", 1)[-1]
+
+    @property
+    def resume_is_pdf(self):
+        return (self.resume_filename or "").lower().endswith(".pdf")
+
+    @property
+    def resume_is_image(self):
+        name = (self.resume_filename or "").lower()
+        return name.endswith((".jpg", ".jpeg", ".png", ".gif", ".webp"))
+
+
+class ApplicationComment(models.Model):
+    application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, related_name="discussion_comments"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="application_comments",
+    )
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.application}"
+
 
 class ReviewAuditLog(models.Model):
     application = models.ForeignKey(
@@ -88,11 +122,20 @@ class ProjectActivity(models.Model):
     submission_file = models.FileField(
         upload_to="project_activities/", null=True, blank=True
     )
+    requires_document = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(null=True, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["order", "due_date"]
+
+    @property
+    def needs_document(self):
+        if self.requires_document:
+            return True
+        if self.grant_activity_id:
+            return bool(self.grant_activity.requires_document)
+        return False
 
     def __str__(self):
         return f"{self.application} - {self.name}"

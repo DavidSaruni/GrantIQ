@@ -1,0 +1,40 @@
+<footer class="landing-footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <a href="{% url 'index' %}" class="logo">
+                <i data-lucide="layers" style="color: var(--accent);"></i>
+                Grant<span>IQ</span>
+            </a>
+            <p>Empowering researchers and institutions across East Africa with transparent grant intelligence and management solutions.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Solutions</h4>
+            <ul>
+                <li><a href="{% url 'index' %}#business-units">Platform Services</a></li>
+                <li><a href="{% url 'index' %}#business-units">Grant Writing Training</a></li>
+                <li><a href="{% url 'index' %}#business-units">Grant Administration</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <ul>
+                <li><a href="{% url 'about' %}">About Us</a></li>
+                <li><a href="{% url 'grants' %}">Active Grants</a></li>
+                <li><a href="{% url 'become_reviewer' %}">Become a Reviewer</a></li>
+                <li><a href="{% url 'contact' %}">Contact Support</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <ul>
+                <li><a href="{% url 'about' %}">Privacy Policy</a></li>
+                <li><a href="{% url 'about' %}">Terms of Service</a></li>
+                <li><a href="{% url 'about' %}">Compliance</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; {% now "Y" %} GRANTIQ. All rights reserved.</p>
+            <p>Ideas Funded. Futures Built.</p>
+    </div>
+</footer>

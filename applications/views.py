@@ -4,13 +4,15 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.core.mail import send_mail
-from django.http import HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from .models import (
     Application,
+    ApplicationComment,
     ReviewAuditLog,
     QuarterlyReport,
     ProjectActivity,
@@ -24,6 +26,113 @@ def is_admin_or_grant_manager(user):
 
 def is_reviewer(user):
     return user.is_authenticated and getattr(user, "role", "") == "REVIEWER"
+
+
+def _is_application_owner(user, application):
+    if not user.is_authenticated:
+        return False
+    if application.user_id and str(application.user_id) == str(user.id):
+        return True
+    return bool(
+        application.email
+        and user.email
+        and application.email.lower() == user.email.lower()
+    )
+
+
+def _can_access_application(user, application):
+    if not user.is_authenticated:
+        return False
+    role = getattr(user, "role", "")
+    if role in ("ADMIN", "GRANT_MANAGER", "REVIEWER"):
+        return True
+    return _is_application_owner(user, application)
+
+
+def _send_application_email(subject, body, recipients):
+    recipients = [email for email in recipients if email]
+    if not recipients:
+        return
+    try:
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            recipient_list=recipients,
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+
+def _notify_application_comment(request, application, comment):
+    author_name = comment.author.get_full_name() or comment.author.email
+    is_owner = _is_application_owner(comment.author, application)
+    if is_owner:
+        if not application.reviewer or not application.reviewer.email:
+            return
+        link = request.build_absolute_uri(
+            reverse("review_application", args=[application.pk])
+        )
+        _send_application_email(
+            f"Applicant reply on {application.grant}",
+            (
+                f"Hello {application.reviewer.get_full_name() or 'Reviewer'},\n\n"
+                f"{author_name} replied on the proposal for '{application.grant}'.\n\n"
+                f"Comment:\n{comment.message}\n\n"
+                f"Open the review page:\n{link}\n\n"
+                f"GrantIQ"
+            ),
+            [application.reviewer.email],
+        )
+        return
+
+    link = request.build_absolute_uri(
+        reverse("application_discussion", args=[application.pk])
+    )
+    _send_application_email(
+        f"Reviewer comment on your {application.grant} application",
+        (
+            f"Hello {application.name},\n\n"
+            f"{author_name} commented on your proposal for '{application.grant}'.\n\n"
+            f"Comment:\n{comment.message}\n\n"
+            f"Read and reply in your GrantIQ dashboard:\n{link}\n\n"
+            f"GrantIQ"
+        ),
+        [application.email],
+    )
+
+
+def _notify_application_decision(request, application, new_status, remarks):
+    link = request.build_absolute_uri(
+        reverse("application_discussion", args=[application.pk])
+    )
+    _send_application_email(
+        f"Your GrantIQ application has been {new_status}",
+        (
+            f"Hello {application.name},\n\n"
+            f"Your application for '{application.grant}' has been {new_status}.\n\n"
+            f"Reviewer remarks:\n{remarks}\n\n"
+            f"View the discussion and decision in your dashboard:\n{link}\n\n"
+            f"GrantIQ"
+        ),
+        [application.email],
+    )
+
+
+def _add_application_comment(request, application):
+    message = (request.POST.get("message") or "").strip()
+    if not message:
+        messages.error(request, "Please enter a comment.")
+        return False
+    comment = ApplicationComment.objects.create(
+        application=application,
+        author=request.user,
+        message=message,
+    )
+    _notify_application_comment(request, application, comment)
+    messages.success(request, "Comment sent. The other party has been notified by email.")
+    return True
 
 @login_required
 def my_grants(request):
@@ -161,13 +270,21 @@ def application(request):
         resume = request.FILES['resume']
         user_id = request.POST['user_id']
 
+        from grants.models import Grant as GrantModel
+
+        def grant_redirect(gid):
+            try:
+                return GrantModel.objects.get(pk=gid).get_absolute_url()
+            except GrantModel.DoesNotExist:
+                return "/grants/"
+
         #  Check if user has made inquiry already
         if request.user.is_authenticated:
             user_id = request.user.id
             has_contacted = Application.objects.all().filter(grant_id=grant_id, user_id=user_id)
             if has_contacted:
                 messages.error(request, 'You have already applied for this grant')
-                return redirect('/grants/' + str(grant_id))    
+                return redirect(grant_redirect(grant_id))
 
         apply = Application(grant=grant, grant_id=grant_id, creator=creator, creator_id=creator_id, name=name, email=email, phone=phone, resume=resume, user_id=user_id)
 
@@ -175,7 +292,7 @@ def application(request):
 
 
         messages.success(request, 'Your application has been submitted')
-        return redirect('/grants/' + str(grant_id))
+        return redirect(grant_redirect(grant_id))
     
     else:
         messages.error(request, 'There was an error submitting your application')
@@ -224,39 +341,34 @@ def review_application(request, pk):
     application = get_object_or_404(Application, pk=pk)
 
     if request.method == "POST":
-        comment = request.POST.get("review_comments", "").strip()
         action = request.POST.get("action")
-        new_status = 'accepted' if action == 'approve' else 'rejected'
+        if action == "comment":
+            _add_application_comment(request, application)
+            return redirect("review_application", pk=application.pk)
 
-        application.review_comments = comment
+        if action not in ("approve", "reject"):
+            messages.error(request, "Choose a valid review action.")
+            return redirect("review_application", pk=application.pk)
+
+        remarks = (request.POST.get("review_comments") or "").strip()
+        if not remarks:
+            messages.error(request, "Please add final remarks before approving or rejecting.")
+            return redirect("review_application", pk=application.pk)
+
+        new_status = "accepted" if action == "approve" else "rejected"
+        application.review_comments = remarks
         application.status = new_status
         application.save()
 
-        # Save audit log
         ReviewAuditLog.objects.create(
             application=application,
             reviewer=request.user,
             action=new_status,
-            comment=comment,
+            comment=remarks,
         )
-
-        # # Send email to applicant
-        # send_mail(
-        #     subject=f"Your Grant Application has been {new_status.title()}",
-        #     message=(
-        #         f"Hello {application.name()},\n\n"
-        #         f"Your application for the grant '{application.grant}' has been {new_status}.\n\n"
-        #         f"Reviewer Comment:\n{comment}\n\n"
-        #         f"Thank you for using GrantIQ.\n"
-        #     ),
-        #     from_email=None,
-        #     recipient_list=[application.email],
-        #     fail_silently=False,
-        # )
-
+        _notify_application_decision(request, application, new_status, remarks)
         messages.success(request, f"Application #{application.id} has been {new_status}.")
 
-        # When an application is accepted, initialize project activities from the grant template
         if new_status == "accepted":
             from grants.models import GrantActivity, Grant
 
@@ -266,7 +378,10 @@ def review_application(request, pk):
                 for template in templates:
                     due_date = None
                     if template.default_due_days:
-                        due_date = (timezone.now() + timezone.timedelta(days=template.default_due_days)).date()
+                        due_date = (
+                            timezone.now()
+                            + timezone.timedelta(days=template.default_due_days)
+                        ).date()
                     ProjectActivity.objects.get_or_create(
                         application=application,
                         grant_activity=template,
@@ -275,16 +390,75 @@ def review_application(request, pk):
                             "description": template.description,
                             "order": template.order,
                             "due_date": due_date,
+                            "requires_document": template.requires_document,
                         },
                     )
             except Grant.DoesNotExist:
                 pass
 
-        return redirect('reviewer_dashboard')
+        return redirect("reviewer_dashboard")
 
-    return render(request, 'applications/review_application.html', {
-        'application': application
-    })
+    comments = application.discussion_comments.select_related("author")
+    return render(
+        request,
+        "applications/review_application.html",
+        {
+            "application": application,
+            "comments": comments,
+            "can_reply": application.status == "pending",
+        },
+    )
+
+
+@login_required
+def application_discussion(request, pk):
+    application = get_object_or_404(Application, pk=pk)
+    if not _can_access_application(request.user, application):
+        return HttpResponseForbidden("You cannot access this application.")
+
+    if request.method == "POST":
+        if application.status != "pending" and not is_admin_or_grant_manager(request.user):
+            messages.error(request, "This application is no longer open for discussion.")
+            return redirect("application_discussion", pk=application.pk)
+        _add_application_comment(request, application)
+        return redirect("application_discussion", pk=application.pk)
+
+    comments = application.discussion_comments.select_related("author")
+    template = (
+        "applications/review_application.html"
+        if getattr(request.user, "role", "") in ("REVIEWER", "ADMIN", "GRANT_MANAGER")
+        and not _is_application_owner(request.user, application)
+        else "applications/application_discussion.html"
+    )
+    if template == "applications/review_application.html":
+        return redirect("review_application", pk=application.pk)
+
+    return render(
+        request,
+        "applications/application_discussion.html",
+        {
+            "application": application,
+            "comments": comments,
+            "can_reply": application.status == "pending",
+        },
+    )
+
+
+@login_required
+@xframe_options_exempt
+def preview_application_proposal(request, pk):
+    application = get_object_or_404(Application, pk=pk)
+    if not _can_access_application(request.user, application):
+        return HttpResponseForbidden("You cannot view this proposal.")
+    if not application.resume:
+        raise Http404("Proposal not found.")
+    from grants.utils import inline_file_response
+
+    return inline_file_response(
+        application.resume,
+        application.resume_filename,
+        "application/pdf" if application.resume_is_pdf else None,
+    )
 
 @login_required
 @user_passes_test(is_reviewer)
@@ -312,6 +486,7 @@ def approve_application(request, pk):
                     "description": template.description,
                     "order": template.order,
                     "due_date": due_date,
+                    "requires_document": template.requires_document,
                 },
             )
     except Grant.DoesNotExist:
@@ -421,5 +596,112 @@ def monitor_reports(request):
     }
 
     return render(request, "applications/monitor_reports.html", context)
+
+
+def _can_access_project(user, application):
+    if getattr(user, "role", "") in ["ADMIN", "GRANT_MANAGER"]:
+        return True
+    return application.user_id == user.id or application.email == user.email
+
+
+@login_required
+def project_activities(request, app_id):
+    application = get_object_or_404(Application, pk=app_id)
+    if not _can_access_project(request.user, application):
+        return HttpResponseForbidden("You cannot view these project activities.")
+
+    activities = ProjectActivity.objects.filter(application=application).select_related(
+        "grant_activity"
+    )
+    completed_count = activities.filter(status="approved").count()
+    pending_count = activities.exclude(status="approved").count()
+    return render(
+        request,
+        "applications/project_activities.html",
+        {
+            "application": application,
+            "activities": activities,
+            "completed_count": completed_count,
+            "pending_count": pending_count,
+        },
+    )
+
+
+@login_required
+def project_activity_detail(request, activity_id):
+    activity = get_object_or_404(
+        ProjectActivity.objects.select_related("application", "grant_activity"),
+        pk=activity_id,
+    )
+    if not _can_access_project(request.user, activity.application):
+        return HttpResponseForbidden("You cannot view this activity.")
+
+    is_grantee = (
+        activity.application.user_id == request.user.id
+        or activity.application.email == request.user.email
+    )
+    is_manager = getattr(request.user, "role", "") in ["ADMIN", "GRANT_MANAGER"]
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "submit" and is_grantee:
+            uploaded = request.FILES.get("submission_file")
+            if activity.needs_document and not uploaded and not activity.submission_file:
+                messages.error(request, "Please upload a document for this activity.")
+            else:
+                if uploaded:
+                    activity.submission_file = uploaded
+                activity.status = "submitted"
+                activity.submitted_at = timezone.now()
+                activity.save()
+                messages.success(request, "Activity submitted successfully.")
+            return redirect("project_activity_detail", activity_id=activity.id)
+
+        if action == "review" and is_manager:
+            decision = request.POST.get("decision")
+            comment = (request.POST.get("review_comment") or "").strip()
+            if decision == "approve":
+                activity.status = "approved"
+                activity.reviewed_at = timezone.now()
+                activity.save()
+                messages.success(request, "Activity approved.")
+            elif decision == "reject":
+                activity.status = "rejected"
+                activity.reviewed_at = timezone.now()
+                activity.save()
+                messages.warning(request, "Activity rejected.")
+            else:
+                messages.error(request, "Select a review decision.")
+            if comment:
+                ActivityComment.objects.create(
+                    activity=activity, author=request.user, message=comment
+                )
+            return redirect("project_activity_detail", activity_id=activity.id)
+
+        if action == "comment":
+            message = (request.POST.get("message") or "").strip()
+            if message:
+                ActivityComment.objects.create(
+                    activity=activity, author=request.user, message=message
+                )
+                messages.success(request, "Comment posted.")
+            return redirect("project_activity_detail", activity_id=activity.id)
+
+    comments = activity.comments.select_related("author").all()
+    base_template = (
+        "admin_base.html" if is_manager else "user_base.html"
+    )
+    return render(
+        request,
+        "applications/project_activity_detail.html",
+        {
+            "activity": activity,
+            "comments": comments,
+            "base_template": base_template,
+            "is_grantee": is_grantee,
+            "is_manager": is_manager,
+        },
+    )
+
 
 

@@ -56,3 +56,52 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+
+class ReviewerApplication(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40)
+    gender = models.CharField(max_length=20, blank=True)
+    nationality = models.CharField(max_length=80)
+    id_number = models.CharField(max_length=80)
+    id_document = models.FileField(upload_to="reviewer_apps/ids/%Y/%m/", blank=True)
+    is_pwd = models.BooleanField(default=False)
+    pwd_number = models.CharField(max_length=80, blank=True)
+    home_county = models.CharField(max_length=80, blank=True)
+    ethnicity = models.CharField(max_length=80, blank=True)
+
+    institution = models.CharField(max_length=255)
+    highest_qualification = models.CharField(max_length=80)
+    years_experience = models.PositiveIntegerField(default=0)
+    cv = models.FileField(upload_to="reviewer_apps/cvs/%Y/%m/")
+    qualification_document = models.FileField(
+        upload_to="reviewer_apps/qualifications/%Y/%m/"
+    )
+    area_of_expertise = models.TextField()
+    ford_categories = models.JSONField(default=list, blank=True)
+
+    privacy_consent = models.BooleanField(default=False)
+    conduct_consent = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+

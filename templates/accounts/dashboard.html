@@ -141,13 +141,15 @@
                     <td><small>{{ application.created_at|date:"M d, Y" }}</small></td>
                     <td><small>{{ application.updated_at|date:"M d, Y" }}</small></td>
                     <td>
+                        <a class="btn btn-sm btn-outline-primary btn-modern" href="{% url 'application_discussion' application.id %}">
+                            <i class="fas fa-comments"></i> Discussion
+                            {% if application.discussion_count %}
+                                <span class="badge bg-primary">{{ application.discussion_count }}</span>
+                            {% endif %}
+                        </a>
                         {% if application.status == 'accepted' %}
                             <a class="btn btn-sm btn-success btn-modern" href="{% url 'upload_quarterly_report' application.id %}">
                                 <i class="fas fa-upload"></i> Upload Report
-                            </a>
-                        {% else %}
-                            <a class="btn btn-sm btn-outline-primary btn-modern" href="{% url 'view_application' application.id %}">
-                                <i class="fas fa-eye"></i> View
                             </a>
                         {% endif %}
                     </td>

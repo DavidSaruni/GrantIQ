@@ -1,50 +1,45 @@
-{% extends 'base.html'%}
-{% block title %} Register Account {% endblock %}
+{% extends 'landing_base.html' %}
+
+{% block title %}Sign Up{% endblock %}
+
 {% block content %}
-
-<section id="register" class="bg-light py-5">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6 mx-auto">
-          <div class="card py-5 ">
-            <div class="card-header bg-dark text-white ">
-              <h4><i class="fa fa-user-plus"></i> Register</h4>
-            </div>
-
-            <div class="card-body">
-             <!-- Alerts -->
-             {% include 'partials/_alerts.html' %}
-                <form action="{% url 'register' %}" method="POST">
-                    {% csrf_token %}
-                  <div class="form-group">
-                  <label for="first_name">First Name</label>
-                  <input type="text" name="first_name" class="form-control" required autocomplete="off">
-                </div>
-
-                <div class="form-group">
-                  <label for="last_name">Last Name</label>
-                  <input type="text" name="last_name" class="form-control" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                  <label for="email">Email</label>
-                  <input type="email" name="email" class="form-control" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                  <label for="password">Password</label>
-                  <input type="password" name="password" class="form-control" required>
-                </div>
-                <div class="form-group">
-                  <label for="confirm_password">Confirm Password</label>
-                  <input type="password" name="confirm_password" class="form-control" required>
-                </div>
-                <input type="submit" value="Register" class="btn btn-secondary btn-block">
-                <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="page-hero">
+    <div class="page-hero-content">
+        <span class="page-hero-badge">Account</span>
+        <h1>Create your GrantIQ account</h1>
+        <p>Join researchers and institutions using GrantIQ to find and manage funding.</p>
     </div>
-  </section>
+</div>
 
+<section class="auth-page">
+    <div class="auth-card">
+        <h1>Sign up</h1>
+        <p class="auth-lead">Fill in your details to get started.</p>
+        <form action="{% url 'register' %}" method="POST">
+            {% csrf_token %}
+            <div class="auth-field">
+                <label for="first_name">First name</label>
+                <input type="text" id="first_name" name="first_name" required autocomplete="given-name">
+            </div>
+            <div class="auth-field">
+                <label for="last_name">Last name</label>
+                <input type="text" id="last_name" name="last_name" required autocomplete="family-name">
+            </div>
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="new-password">
+            </div>
+            <div class="auth-field">
+                <label for="confirm_password">Confirm password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="auth-submit">Create account</button>
+        </form>
+        <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+    </div>
+</section>
 {% endblock %}

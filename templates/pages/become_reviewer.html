@@ -1,0 +1,265 @@
+{% extends 'landing_base.html' %}
+
+{% block title %}Become a Reviewer{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <div class="page-hero-content">
+        <span class="page-hero-badge">Join the expert review panel</span>
+        <h1>Call for Expert Reviewers</h1>
+        <p>Contribute your expertise to competitive research funding and help advance research excellence.</p>
+    </div>
+</div>
+
+<section class="landing-section">
+    <div class="reviewer-layout">
+        <p class="reviewer-intro">
+            Join our pool of expert reviewers and contribute to advancing research excellence.
+        </p>
+
+        <article class="reviewer-info-card">
+            <div class="reviewer-info-head">
+                <span>1</span>
+                <h3>Background</h3>
+            </div>
+            <p>
+                GrantIQ supports competitive research funding through calls for proposals across
+                different science, technology, and innovation priority areas. To do this well,
+                we need subject-area experts to undertake technical reviews of proposals submitted
+                from time to time.
+            </p>
+            <p>
+                As part of our commitment to sustainable research funding, academic excellence,
+                inclusivity, and intellectual rigor, GrantIQ is constituting a panel of reviewers
+                to contribute their expertise in the proposal review process.
+            </p>
+            <p>
+                We invite applications from individual experts across diverse geographic regions,
+                institutional affiliations, career stages, and perspectives whose expertise aligns
+                with the relevant thematic areas.
+            </p>
+        </article>
+
+        <article class="reviewer-info-card">
+            <div class="reviewer-info-head">
+                <span>2</span>
+                <h3>Reviewer Requirements</h3>
+            </div>
+            <ul class="reviewer-list">
+                <li><strong>Citizenship:</strong> Be a Kenyan citizen</li>
+                <li><strong>Qualifications:</strong> Academics, researchers, and practitioners with demonstrated expertise in relevant fields</li>
+                <li><strong>Career Stage:</strong> Early-career researchers, mid-career scholars, and senior academics are equally encouraged to apply</li>
+                <li><strong>Doctoral Candidates:</strong> Advanced doctoral candidates with appropriate subject-matter expertise may also be considered</li>
+                <li><strong>Experience:</strong> Expertise in having reviewed other calls will be an added advantage</li>
+            </ul>
+        </article>
+
+        <article class="reviewer-info-card">
+            <div class="reviewer-info-head">
+                <span>3</span>
+                <h3>Reviewer Responsibilities</h3>
+            </div>
+            <ul class="reviewer-list">
+                <li>Provide a thorough, impartial, and constructive assessment of proposals for funding consideration</li>
+                <li>Evaluate submissions for originality, methodological soundness, and scholarly contribution</li>
+                <li>Adhere to ethical review practices such as confidentiality, data privacy and full disclosure, including conflict of interest</li>
+                <li>Complete allocated reviews within established timelines</li>
+            </ul>
+        </article>
+
+        <h2 class="reviewer-form-title">Reviewer Application Form</h2>
+
+        <form action="{% url 'become_reviewer' %}" method="POST" enctype="multipart/form-data" id="reviewer-form">
+            {% csrf_token %}
+
+            <div class="reviewer-form-card">
+                <h3>Data Protection &amp; Privacy Notice</h3>
+                <p><strong>Your Privacy Matters</strong></p>
+                <p>GrantIQ is committed to protecting your personal data in accordance with applicable data protection laws and regulations.</p>
+                <p><strong>Data We Collect:</strong></p>
+                <ul class="reviewer-list">
+                    <li>Personal information (name, email, phone, nationality, etc.)</li>
+                    <li>Professional information (institution, qualifications, expertise)</li>
+                    <li>Research categories and areas of interest</li>
+                    <li>CV and supporting documents</li>
+                </ul>
+                <p><strong>How We Use Your Data:</strong></p>
+                <ul class="reviewer-list">
+                    <li>Processing your reviewer application</li>
+                    <li>Matching you with relevant research proposals for review</li>
+                    <li>Communication regarding review assignments</li>
+                    <li>Maintaining reviewer database and records</li>
+                    <li>Compliance with legal and regulatory requirements</li>
+                </ul>
+                <p><strong>Your Rights:</strong> You have the right to access, correct, or request deletion of your personal data. You may also withdraw your consent at any time.</p>
+                <p><strong>Data Sharing:</strong> Your data may be shared with authorized personnel as necessary for review administration. We do not sell your personal data to third parties.</p>
+                <label class="reviewer-check">
+                    <input type="checkbox" name="privacy_consent" required>
+                    I have read and understood the Data Protection &amp; Privacy Notice. I consent to the collection, processing, and use of my personal data as described above for the purposes of reviewer application and administration.
+                </label>
+            </div>
+
+            <div class="reviewer-form-card">
+                <h3>Personal Information</h3>
+                <div class="reviewer-form-grid">
+                    <div class="auth-field">
+                        <label for="first_name">First name *</label>
+                        <input type="text" name="first_name" id="first_name" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="last_name">Last name *</label>
+                        <input type="text" name="last_name" id="last_name" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="email">Email address *</label>
+                        <input type="email" name="email" id="email" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="phone">Phone number *</label>
+                        <input type="text" name="phone" id="phone" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="gender">Gender</label>
+                        <select name="gender" id="gender">
+                            <option value="">Please Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="auth-field">
+                        <label for="nationality">Nationality *</label>
+                        <select name="nationality" id="nationality" required>
+                            <option value="">Please Select</option>
+                            {% for item in nationalities %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="auth-field">
+                        <label for="id_number">Identification document number *</label>
+                        <input type="text" name="id_number" id="id_number" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="id_document">Upload identification document (PDF only)</label>
+                        <input type="file" name="id_document" id="id_document" accept="application/pdf">
+                        <small>Upload a clear copy of your National ID, Passport, or other official ID</small>
+                    </div>
+                    <div class="auth-field">
+                        <label for="is_pwd">Person with Disability (PWD)</label>
+                        <select name="is_pwd" id="is_pwd">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="auth-field" id="pwd-number-wrap" style="display:none;">
+                        <label for="pwd_number">PWD number</label>
+                        <input type="text" name="pwd_number" id="pwd_number">
+                    </div>
+                    <div class="auth-field">
+                        <label for="home_county">Home county</label>
+                        <select name="home_county" id="home_county">
+                            <option value="">Please Select</option>
+                            {% for item in counties %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="auth-field">
+                        <label for="ethnicity">Ethnicity</label>
+                        <select name="ethnicity" id="ethnicity">
+                            <option value="">Please Select</option>
+                            {% for item in ethnicities %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reviewer-form-card">
+                <h3>Academic &amp; Professional Information</h3>
+                <div class="reviewer-form-grid">
+                    <div class="auth-field">
+                        <label for="institution">Institution of affiliation *</label>
+                        <input type="text" name="institution" id="institution" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="highest_qualification">Highest qualification *</label>
+                        <select name="highest_qualification" id="highest_qualification" required>
+                            <option value="">Please Select</option>
+                            {% for item in qualifications %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="auth-field">
+                        <label for="years_experience">Years of research/professional experience *</label>
+                        <input type="number" min="0" name="years_experience" id="years_experience" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="area_of_expertise">Area of expertise *</label>
+                        <input type="text" name="area_of_expertise" id="area_of_expertise" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="cv">Upload CV/Resume (PDF only - Max 2 pages) *</label>
+                        <input type="file" name="cv" id="cv" accept="application/pdf" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="qualification_document">Upload highest qualification document (PDF only) *</label>
+                        <input type="file" name="qualification_document" id="qualification_document" accept="application/pdf" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reviewer-form-card">
+                <h3>FORD Research Categories</h3>
+                <p>Please select the FORD (Fields of Research and Development) categories and subcategories you are qualified to review. <strong>Select all that apply.</strong></p>
+
+                {% for field in ford_categories %}
+                    <div class="ford-field">
+                        <button class="ford-toggle" type="button" aria-expanded="false">
+                            {{ field.code }} - {{ field.name }}
+                        </button>
+                        <div class="ford-panel">
+                            {% for group in field.groups %}
+                                <div class="ford-group">
+                                    <h4>{{ group.code }} - {{ group.name }}</h4>
+                                    {% for code, label in group.items %}
+                                        <label class="reviewer-check">
+                                            <input type="checkbox" name="ford_categories" value="{{ code }}">
+                                            {{ code }} - {{ label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="reviewer-form-card">
+                <label class="reviewer-check">
+                    <input type="checkbox" name="conduct_consent" required>
+                    I confirm that the information provided is accurate and I agree to adhere to the reviewer code of conduct and conflict of interest policies.
+                </label>
+                <button type="submit" class="auth-submit reviewer-submit">Submit Application</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('is_pwd').addEventListener('change', function () {
+    document.getElementById('pwd-number-wrap').style.display = this.value === 'Yes' ? 'block' : 'none';
+});
+document.querySelectorAll('.ford-toggle').forEach(function (button) {
+    button.addEventListener('click', function () {
+        var field = button.closest('.ford-field');
+        var open = field.classList.toggle('is-open');
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+});
+</script>
+{% endblock %}

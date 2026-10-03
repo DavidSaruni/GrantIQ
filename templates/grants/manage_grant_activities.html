@@ -65,6 +65,17 @@
                     </div>
                 </div>
 
+                <div class="mb-3 form-check" style="padding: 0.85rem 1rem 0.85rem 2.1rem; background: #f8fafc; border-radius: 8px;">
+                    <input class="form-check-input" type="checkbox" name="requires_document" id="requires_document" value="1"
+                           {% if activity_to_edit.requires_document %}checked{% endif %}>
+                    <label class="form-check-label" for="requires_document" style="font-weight: 600; color: #1e293b;">
+                        This activity requires document submission
+                    </label>
+                    <small class="text-muted d-block">
+                        If checked, the grantee must upload a document for this activity.
+                    </small>
+                </div>
+
                 <div class="d-grid">
                     {% if activity_to_edit %}
                         <button type="submit" class="btn btn-primary" style="border-radius: 8px;">
@@ -93,6 +104,7 @@
                             <th>Order</th>
                             <th>Activity</th>
                             <th>Default Due (days)</th>
+                            <th>Document</th>
                             <th style="width: 110px;">Actions</th>
                         </tr>
                     </thead>
@@ -107,6 +119,13 @@
                                 {% endif %}
                             </td>
                             <td>{{ activity.default_due_days }}</td>
+                            <td>
+                                {% if activity.requires_document %}
+                                    <span class="badge bg-info text-dark"><i class="fas fa-file-upload"></i> Required</span>
+                                {% else %}
+                                    <small class="text-muted">Optional</small>
+                                {% endif %}
+                            </td>
                             <td>
                                 <form method="POST" style="display:inline;">
                                     {% csrf_token %}
@@ -128,7 +147,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center" style="padding: 2rem;">
+                            <td colspan="5" class="text-center" style="padding: 2rem;">
                                 <i class="fas fa-inbox" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 0.5rem;"></i>
                                 <p style="color: #64748b; margin: 0;">No activities defined for this grant yet.</p>
                             </td>

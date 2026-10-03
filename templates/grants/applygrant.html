@@ -1,57 +1,56 @@
-{% extends 'base.html' %}
-{% block title %} Application Form {% endblock %}
+{% extends 'landing_base.html' %}
 
-{% load static %}
-
+{% block title %}Apply for {{ grant.title }}{% endblock %}
 
 {% block content %}
-
-<div class="py-5 px-5 centered">
-  <h1 class="text-center py-5">Application Form</h1>
-<div class="form-group d-flex align-items-center justify-content-center">
-  <form action="{% url 'application' %}" method="POST" enctype="multipart/form-data" class="col-md-6 col-md-offset-6"> 
-    {% csrf_token %}
-    {% if user.is_authenticated %}
-      <input type="hidden" name="user_id" value="{{ user.id }}">
-    {% endif %}
-    <input type="hidden" name="grant_id" value="{{ grant.id }}">
-    <input type="hidden" name="creator" value="{{ grant.creator }}">
-    <input type="hidden" name="creator_id" value="{{ grant.creator.id }}"> 
-
-
-    <div class="form-group">
-      <label for="grant_name" class="col-form-label">Grant Title:</label>
-      <input type="text" name="grant" class="form-control" value="{{ grant.title }}">
+<div class="page-hero">
+    <div class="page-hero-content">
+        <span class="page-hero-badge">Application</span>
+        <h1>Apply for this grant</h1>
+        <p>Submit your details and proposal for {{ grant.title }}.</p>
     </div>
-    <div class="form-group">
-      <label for="name" class="col-form-label">Name:</label>
-      <input type="text" name="name" class="form-control"
-      {% if user.is_authenticated %}
-        value="{{user.first_name}} {{user.last_name}}"
-      {% endif %}
-      required>
-    </div>
-    <div class="form-group">
-      <label for="email" class="col-form-label">Email:</label>
-      <input type="email" name="email" class="form-control" 
-      {% if user.is_authenticated %}
-        value="{{user.email}}"
-      {% endif %}
-      required>
-    </div>
-    <div class="form-group">
-      <label for="phone" class="col-form-label">Phone:</label>
-      <input type="text" name="phone" class="form-control">
-    </div>    
-
-    <div class="form-group">
-        <label for="resume" class="col-form-label">Upload Proposal</label>
-        <input type="file" name="resume" class="form-control-file" id="file" required>
-      </div>
-      <hr>
-      <input type="submit" value="Submit" class="btn btn-block btn-secondary">
-    </form>
-</div>
 </div>
 
+<section class="auth-page apply-page">
+    <div class="auth-card">
+        <h1>Application form</h1>
+        <p class="auth-lead">Review the call details, then complete the form below.</p>
+        <form action="{% url 'application' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if user.is_authenticated %}
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+            {% endif %}
+            <input type="hidden" name="grant_id" value="{{ grant.id }}">
+            <input type="hidden" name="creator" value="{{ grant.creator }}">
+            <input type="hidden" name="creator_id" value="{{ grant.creator.id }}">
+
+            <div class="auth-field">
+                <label for="grant">Grant title</label>
+                <input type="text" id="grant" name="grant" value="{{ grant.title }}" readonly>
+            </div>
+            <div class="auth-field">
+                <label for="name">Full name</label>
+                <input type="text" id="name" name="name" required
+                    {% if user.is_authenticated %}value="{{ user.first_name }} {{ user.last_name }}"{% endif %}>
+            </div>
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required
+                    {% if user.is_authenticated %}value="{{ user.email }}"{% endif %}>
+            </div>
+            <div class="auth-field">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone">
+            </div>
+            <div class="auth-field">
+                <label for="resume">Upload proposal</label>
+                <input type="file" id="resume" name="resume" required>
+            </div>
+            <button type="submit" class="auth-submit">Submit application</button>
+        </form>
+        <p class="auth-switch">
+            <a href="{{ grant.get_absolute_url }}">Back to grant details</a>
+        </p>
+    </div>
+</section>
 {% endblock %}
