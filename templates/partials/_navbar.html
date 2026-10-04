@@ -44,7 +44,11 @@
               class="nav-item"
             {% endif %}
             >
-            <a class="nav-link" href="{% url 'become_reviewer' %}">BECOME A REVIEWER</a></li>
+            {% url 'become_reviewer' as become_reviewer_url %}
+            {% if become_reviewer_url %}
+            <a class="nav-link" href="{{ become_reviewer_url }}">BECOME A REVIEWER</a>
+            {% endif %}
+            </li>
 
               <!-- If the user is logged in then display dasboard and logout -->
               {% if user.is_authenticated %}

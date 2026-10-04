@@ -20,9 +20,12 @@
             <li>
                 <a href="{% url 'about' %}" {% if request.resolver_match.url_name == 'about' %}class="active"{% endif %}>About Us</a>
             </li>
+            {% url 'become_reviewer' as become_reviewer_url %}
+            {% if become_reviewer_url %}
             <li>
-                <a href="{% url 'become_reviewer' %}" {% if request.resolver_match.url_name == 'become_reviewer' %}class="active"{% endif %}>Become a Reviewer</a>
+                <a href="{{ become_reviewer_url }}" {% if request.resolver_match.url_name == 'become_reviewer' %}class="active"{% endif %}>Become a Reviewer</a>
             </li>
+            {% endif %}
             {% if user.is_authenticated %}
                 <li>
                     {% if user.is_superuser or user.is_staff or user.role == 'ADMIN' %}
